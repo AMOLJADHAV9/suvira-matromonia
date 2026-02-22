@@ -235,6 +235,90 @@ export const getProfilesByOppositeGender = async (
 }
 
 /**
+ * Fetch ALL opposite-gender profiles (approved, pending, admin, etc).
+ * For male user → all female profiles. For female user → all male profiles.
+ * Excludes only suspended users and own profile. Used by Dashboard & Find Matches.
+ *
+ * @param {string} currentUserId - Logged-in user's UID (excluded from results)
+ * @param {string} userGender - From personal.gender (male|female, case-insensitive)
+ * @param {number} maxLimit - Max profiles to return (default 50)
+ * @returns {Promise<{success: boolean, data: Array, error?: string}>}
+ */
+export const getAllProfilesByOppositeGender = async (
+  currentUserId,
+  userGender,
+  maxLimit = 50
+) => {
+  log('getAllProfilesByOppositeGender called', { currentUserId, userGender, maxLimit })
+
+  if (!currentUserId || !userGender) {
+    log('Validation failed: missing userId or gender')
+    return {
+      success: false,
+      data: [],
+      error: 'Missing user ID or gender. Cannot fetch profiles.'
+    }
+  }
+
+  const oppositeGender = getOppositeGender(userGender)
+  if (!oppositeGender) {
+    log('Validation failed: invalid gender value', userGender)
+    return {
+      success: false,
+      data: [],
+      error: 'Invalid gender. Must be "Male" or "Female".'
+    }
+  }
+
+  if (!validateOppositeGender(userGender, oppositeGender)) {
+    log('Validation failed: same-gender block', { userGender, oppositeGender })
+    return {
+      success: false,
+      data: [],
+      error: 'Invalid filter: cannot fetch same gender profiles.'
+    }
+  }
+
+  try {
+    const q = query(
+      collection(db, 'users'),
+      where('personal.gender', '==', oppositeGender),
+      limit(maxLimit + 50)
+    )
+
+    log('Executing Firestore query: gender==', oppositeGender, '(all statuses, excludes suspended)')
+    const snapshot = await getDocs(q)
+    const results = []
+
+    snapshot.forEach((docSnap) => {
+      if (docSnap.id === currentUserId) return
+      const data = docSnap.data()
+      if (data.isSuspended === true) return
+      const docGender = data?.personal?.gender
+      if (docGender && normalizeGender(docGender) === normalizeGender(userGender)) return
+      results.push({ id: docSnap.id, ...data })
+    })
+
+    results.sort((a, b) => {
+      const aTime = a.createdAt?.seconds ?? a.lastActive?.seconds ?? 0
+      const bTime = b.createdAt?.seconds ?? b.lastActive?.seconds ?? 0
+      return bTime - aTime
+    })
+
+    const data = results.slice(0, maxLimit)
+    log('Query success:', data.length, 'profiles (all statuses)')
+    return { success: true, data }
+  } catch (error) {
+    console.error('[Profiles] Error fetching all profiles by gender:', error)
+    return {
+      success: false,
+      data: [],
+      error: error?.message || 'Failed to load profiles'
+    }
+  }
+}
+
+/**
  * Fetch ALL approved profiles (both genders) for landing page.
  * Only approved + not suspended.
  *

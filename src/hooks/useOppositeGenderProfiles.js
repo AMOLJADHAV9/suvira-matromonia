@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getProfilesByOppositeGender, fetchUserGenderFromFirestore } from '../services/profiles'
+import { getAllProfilesByOppositeGender, fetchUserGenderFromFirestore } from '../services/profiles'
 
 /**
- * Hook for strict gender-based profile fetching.
- * Fetches opposite gender profiles only (Male→Female, Female→Male).
- * Used by Dashboard, Search, Landing pages.
+ * Hook for gender-based profile fetching.
+ * Fetches all opposite gender profiles (Male→Female, Female→Male) – approved, pending, etc.
+ * Excludes suspended users. Used by Dashboard and Find Matches.
  *
  * @param {object} options
  * @param {string} options.userId - Logged-in user's UID
@@ -58,7 +58,7 @@ export const useOppositeGenderProfiles = ({
     setError(null)
 
     try {
-      const result = await getProfilesByOppositeGender(userId, gender, limit)
+      const result = await getAllProfilesByOppositeGender(userId, gender, limit)
       if (result.success) {
         setProfiles(result.data)
         setError(null)
