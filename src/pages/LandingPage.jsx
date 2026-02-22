@@ -7,18 +7,16 @@ import Header from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
 import Card from '../components/ui/Card'
 import { useAuth } from '../context/AuthContext'
-import { useOppositeGenderProfiles } from '../hooks/useOppositeGenderProfiles'
+import { useAllProfiles } from '../hooks/useAllProfiles'
 import ProfileCard from '../components/profile/ProfileCard'
 
 const LandingPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { isAuthenticated, currentUser, userProfile } = useAuth()
-  const { profiles: featuredProfiles } = useOppositeGenderProfiles({
-    userId: currentUser?.uid,
-    userGender: userProfile?.personal?.gender,
-    limit: 8,
-    enabled: !!currentUser?.uid && !!userProfile?.personal?.gender
+  const { isAuthenticated } = useAuth()
+  const { profiles: allProfiles, loading: profilesLoading } = useAllProfiles({
+    limit: 16,
+    enabled: true
   })
 
   // Hero banner carousel images
@@ -251,16 +249,19 @@ const LandingPage = () => {
               Featured Matches
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {featuredProfiles.length > 0
-                ? `Discover ${userProfile?.personal?.gender === 'male' ? 'brides' : 'grooms'} who could be your perfect match`
-                : 'Discover verified profiles of Indian brides and grooms looking for their perfect match'}
+              Discover verified profiles of Indian brides and grooms looking for their perfect match
             </p>
           </motion.div>
 
-          {/* Logged-in: Real profiles by opposite gender */}
-          {featuredProfiles.length > 0 ? (
+          {/* All users from database */}
+          {profilesLoading ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <div className="w-12 h-12 rounded-full border-4 border-primary-maroon/30 border-t-primary-gold animate-spin" />
+              <p className="text-gray-600">Loading profiles...</p>
+            </div>
+          ) : allProfiles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProfiles.map((profile, index) => (
+              {allProfiles.map((profile, index) => (
                 <motion.div
                   key={profile.id}
                   initial={{ opacity: 0, y: 30 }}

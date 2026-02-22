@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, limit, doc, getDoc, orderBy } from 'firebase/firestore'
 import { db } from './firebase'
 import { PROFILE_STATUS } from '../utils/constants'
 
@@ -226,6 +226,43 @@ export const getProfilesByOppositeGender = async (
     return { success: true, data }
   } catch (error) {
     console.error('[Profiles] Error fetching profiles by gender:', error)
+    return {
+      success: false,
+      data: [],
+      error: error?.message || 'Failed to load profiles'
+    }
+  }
+}
+
+/**
+ * Fetch ALL approved profiles (both genders) for landing page.
+ * No auth required - public view of verified profiles.
+ *
+ * @param {number} maxLimit - Max profiles to return (default 24)
+ * @returns {Promise<{success: boolean, data: Array, error?: string}>}
+ */
+export const getAllApprovedProfiles = async (maxLimit = 24) => {
+  log('getAllApprovedProfiles called', { maxLimit })
+
+  try {
+    const q = query(
+      collection(db, 'users'),
+      where('profileStatus', '==', PROFILE_STATUS.APPROVED),
+      orderBy('createdAt', 'desc'),
+      limit(maxLimit * 2)
+    )
+
+    log('Executing Firestore query: all approved profiles')
+    const snapshot = await getDocs(q)
+    const results = snapshot.docs
+      .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+      .filter((p) => p.isSuspended !== true)
+      .slice(0, maxLimit)
+
+    log('Query success:', results.length, 'profiles')
+    return { success: true, data: results }
+  } catch (error) {
+    console.error('[Profiles] Error fetching all profiles:', error)
     return {
       success: false,
       data: [],

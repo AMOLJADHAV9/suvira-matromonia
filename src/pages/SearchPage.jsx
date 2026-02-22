@@ -75,7 +75,8 @@ const SearchPage = () => {
     userId: currentUser?.uid,
     userGender: userProfile?.personal?.gender,
     limit: 100,
-    enabled: !!currentUser && !!userProfile
+    fetchFromFirestore: true, // fetch gender from Firestore when not in context → male→female, female→male
+    enabled: !!currentUser?.uid
   })
 
   const matchesFilters = (profile) => {
