@@ -236,7 +236,7 @@ export const getProfilesByOppositeGender = async (
 
 /**
  * Fetch ALL approved profiles (both genders) for landing page.
- * No auth required - public view of verified profiles.
+ * Only approved + not suspended.
  *
  * @param {number} maxLimit - Max profiles to return (default 24)
  * @returns {Promise<{success: boolean, data: Array, error?: string}>}
@@ -267,6 +267,41 @@ export const getAllApprovedProfiles = async (maxLimit = 24) => {
       success: false,
       data: [],
       error: error?.message || 'Failed to load profiles'
+    }
+  }
+}
+
+/**
+ * Fetch ALL users for landing page (approved, pending, etc).
+ * Excludes only suspended. Includes admins and regular users.
+ *
+ * @param {number} maxLimit - Max profiles to return (default 50)
+ * @returns {Promise<{success: boolean, data: Array, error?: string}>}
+ */
+export const getAllUsers = async (maxLimit = 50) => {
+  log('getAllUsers called', { maxLimit })
+
+  try {
+    const q = query(
+      collection(db, 'users'),
+      orderBy('createdAt', 'desc'),
+      limit(maxLimit)
+    )
+
+    log('Executing Firestore query: all users')
+    const snapshot = await getDocs(q)
+    const results = snapshot.docs
+      .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+      .filter((p) => p.isSuspended !== true)
+
+    log('Query success:', results.length, 'users')
+    return { success: true, data: results }
+  } catch (error) {
+    console.error('[Profiles] Error fetching all users:', error)
+    return {
+      success: false,
+      data: [],
+      error: error?.message || 'Failed to load users'
     }
   }
 }

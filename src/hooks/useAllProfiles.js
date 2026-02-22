@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getAllApprovedProfiles } from '../services/profiles'
+import { getAllUsers } from '../services/profiles'
 
 /**
- * Hook to fetch all approved profiles (both genders) for landing page.
- * Works for both logged-in and guest users.
+ * Hook to fetch all user profiles (approved, pending, admin, etc.) for landing page.
+ * Excludes suspended users. Works for both logged-in and guest users.
  *
  * @param {object} options
  * @param {number} options.limit - Max profiles (default 24)
@@ -26,7 +26,7 @@ export const useAllProfiles = ({ limit = 24, enabled = true } = {}) => {
     setError(null)
 
     try {
-      const result = await getAllApprovedProfiles(limit)
+      const result = await getAllUsers(limit)
       if (result.success) {
         setProfiles(result.data)
         setError(null)
