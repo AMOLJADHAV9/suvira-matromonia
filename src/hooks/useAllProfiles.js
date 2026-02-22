@@ -3,7 +3,7 @@ import { getAllUsers } from '../services/profiles'
 
 /**
  * Hook to fetch all user profiles (approved, pending, admin, etc.) for landing page.
- * Excludes suspended users. Works for both logged-in and guest users.
+ * Excludes suspended users. Intended for logged-out users only – pass enabled: !isAuthenticated().
  *
  * @param {object} options
  * @param {number} options.limit - Max profiles (default 24)

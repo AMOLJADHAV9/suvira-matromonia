@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { FaCheck, FaShieldAlt, FaLock, FaQuoteLeft, FaStar, FaHeart, FaEye } from 'react-icons/fa'
+import { FaCheck, FaShieldAlt, FaLock, FaQuoteLeft, FaStar } from 'react-icons/fa'
 import Button from '../components/ui/Button'
 import Header from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
-import Card from '../components/ui/Card'
 import { useAuth } from '../context/AuthContext'
 import { useAllProfiles } from '../hooks/useAllProfiles'
 import ProfileCard from '../components/profile/ProfileCard'
@@ -16,7 +15,7 @@ const LandingPage = () => {
   const { isAuthenticated } = useAuth()
   const { profiles: allProfiles, loading: profilesLoading } = useAllProfiles({
     limit: 16,
-    enabled: true
+    enabled: !isAuthenticated()  // Only fetch all users when logged out
   })
 
   // Hero banner carousel images
@@ -273,237 +272,7 @@ const LandingPage = () => {
                 </motion.div>
               ))}
             </div>
-          ) : (
-            <>
-          {/* Female Profiles - Static for non-logged-in */}
-          <div className="mb-12">
-            <h3 className="text-2xl font-serif font-semibold text-primary-maroon mb-6 text-center">
-              Featured Brides
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                {
-                  name: 'Priya Sharma',
-                  age: 26,
-                  location: 'Mumbai, Maharashtra',
-                  religion: 'Hindu',
-                  caste: 'Brahmin',
-                  education: 'MBA',
-                  occupation: 'Marketing Manager',
-                  image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
-                  bio: 'Looking for a life partner who values family traditions and has a successful career.'
-                },
-                {
-                  name: 'Anjali Patel',
-                  age: 28,
-                  location: 'Ahmedabad, Gujarat',
-                  religion: 'Hindu',
-                  caste: 'Patel',
-                  education: 'M.Sc',
-                  occupation: 'Software Engineer',
-                  image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80',
-                  bio: 'Well-educated professional seeking a compatible match with similar values and goals.'
-                },
-                {
-                  name: 'Meera Reddy',
-                  age: 25,
-                  location: 'Hyderabad, Telangana',
-                  religion: 'Hindu',
-                  caste: 'Reddy',
-                  education: 'B.Tech',
-                  occupation: 'Data Analyst',
-                  image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80',
-                  bio: 'Traditional values with modern outlook. Looking for a caring and understanding partner.'
-                },
-                {
-                  name: 'Kavya Nair',
-                  age: 27,
-                  location: 'Kochi, Kerala',
-                  religion: 'Hindu',
-                  caste: 'Nair',
-                  education: 'M.A',
-                  occupation: 'Teacher',
-                  image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
-                  bio: 'Educated and cultured, seeking a partner who respects traditions and family values.'
-                }
-              ].map((profile, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Card hover className="overflow-hidden">
-                    <div className="relative">
-                      <div className="w-full h-64 bg-gradient-to-br from-primary-maroon to-primary-gold flex items-center justify-center overflow-hidden">
-                        <img
-                          src={profile.image}
-                          alt={profile.name}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute top-2 right-2 bg-primary-gold text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          Verified
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <h4 className="text-xl font-semibold text-primary-maroon mb-1">
-                          {profile.name}
-                        </h4>
-                        <p className="text-gray-600 text-sm mb-3">
-                          {profile.age} years • {profile.location}
-                        </p>
-                        <div className="space-y-1 mb-3 text-sm text-gray-600">
-                          <div>Religion: <span className="font-medium">{profile.religion}</span></div>
-                          <div>Caste: <span className="font-medium">{profile.caste}</span></div>
-                          <div>Education: <span className="font-medium">{profile.education}</span></div>
-                          <div>Occupation: <span className="font-medium">{profile.occupation}</span></div>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                          {profile.bio}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => navigate(isAuthenticated() ? '/search' : '/register')}
-                            icon={<FaEye />}
-                          >
-                            View
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => navigate(isAuthenticated() ? '/search' : '/register')}
-                            icon={<FaHeart />}
-                          >
-                            Interest
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Male Profiles */}
-          <div>
-            <h3 className="text-2xl font-serif font-semibold text-primary-maroon mb-6 text-center">
-              Featured Grooms
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                {
-                  name: 'Rahul Kumar',
-                  age: 29,
-                  location: 'Delhi, NCR',
-                  religion: 'Hindu',
-                  caste: 'Kumar',
-                  education: 'B.Tech',
-                  occupation: 'Software Engineer',
-                  image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
-                  bio: 'IT professional with traditional values. Looking for a life partner who shares similar interests.'
-                },
-                {
-                  name: 'Vikram Singh',
-                  age: 31,
-                  location: 'Pune, Maharashtra',
-                  religion: 'Hindu',
-                  caste: 'Rajput',
-                  education: 'MBA',
-                  occupation: 'Business Manager',
-                  image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80',
-                  bio: 'Business professional seeking a well-educated and family-oriented partner for life.'
-                },
-                {
-                  name: 'Arjun Menon',
-                  age: 28,
-                  location: 'Bangalore, Karnataka',
-                  religion: 'Hindu',
-                  caste: 'Menon',
-                  education: 'M.Tech',
-                  occupation: 'Senior Engineer',
-                  image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80',
-                  bio: 'Engineer with a passion for technology and family values. Looking for a compatible match.'
-                },
-                {
-                  name: 'Aditya Iyer',
-                  age: 30,
-                  location: 'Chennai, Tamil Nadu',
-                  religion: 'Hindu',
-                  caste: 'Iyer',
-                  education: 'CA',
-                  occupation: 'Chartered Accountant',
-                  image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80',
-                  bio: 'Finance professional seeking a life partner who values education and family traditions.'
-                }
-              ].map((profile, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Card hover className="overflow-hidden">
-                    <div className="relative">
-                      <div className="w-full h-64 bg-gradient-to-br from-primary-maroon to-primary-gold flex items-center justify-center overflow-hidden">
-                        <img
-                          src={profile.image}
-                          alt={profile.name}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute top-2 right-2 bg-primary-gold text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          Verified
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <h4 className="text-xl font-semibold text-primary-maroon mb-1">
-                          {profile.name}
-                        </h4>
-                        <p className="text-gray-600 text-sm mb-3">
-                          {profile.age} years • {profile.location}
-                        </p>
-                        <div className="space-y-1 mb-3 text-sm text-gray-600">
-                          <div>Religion: <span className="font-medium">{profile.religion}</span></div>
-                          <div>Caste: <span className="font-medium">{profile.caste}</span></div>
-                          <div>Education: <span className="font-medium">{profile.education}</span></div>
-                          <div>Occupation: <span className="font-medium">{profile.occupation}</span></div>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                          {profile.bio}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => navigate(isAuthenticated() ? '/search' : '/register')}
-                            icon={<FaEye />}
-                          >
-                            View
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => navigate(isAuthenticated() ? '/search' : '/register')}
-                            icon={<FaHeart />}
-                          >
-                            Interest
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-            </>
-          )}
+          ) : null}
 
           {/* CTA */}
           <motion.div
