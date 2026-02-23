@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { getDashboardAnalytics } from '../../services/admin'
+import { getDashboardAnalytics, getDashboardChartData } from '../../services/admin'
 import { FaUsers, FaUserCheck, FaHeart, FaExclamationTriangle, FaCrown, FaRupeeSign, FaChartLine } from 'react-icons/fa'
+import GenderPieChart from '../../components/admin/charts/GenderPieChart'
+import StatusPieChart from '../../components/admin/charts/StatusPieChart'
+import UsersOverTimeChart from '../../components/admin/charts/UsersOverTimeChart'
+import InterestsOverTimeChart from '../../components/admin/charts/InterestsOverTimeChart'
+import RevenueLineChart from '../../components/admin/charts/RevenueLineChart'
 
 const StatCard = ({ icon: Icon, label, value, sub, onClick }) => (
   <button
@@ -25,6 +30,7 @@ const AdminDashboard = () => {
   const { currentUser } = useAuth()
   const navigate = useNavigate()
   const [data, setData] = useState(null)
+  const [chartData, setChartData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -32,9 +38,13 @@ const AdminDashboard = () => {
     const load = async () => {
       if (!currentUser?.uid) return
       setLoading(true)
-      const res = await getDashboardAnalytics(currentUser.uid)
-      if (res.success) setData(res.data)
-      else setError(res.error)
+      const [analyticsRes, chartRes] = await Promise.all([
+        getDashboardAnalytics(currentUser.uid),
+        getDashboardChartData(currentUser.uid),
+      ])
+      if (analyticsRes.success) setData(analyticsRes.data)
+      else setError(analyticsRes.error)
+      if (chartRes.success) setChartData(chartRes.data)
       setLoading(false)
     }
     load()

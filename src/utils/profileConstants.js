@@ -1,54 +1,38 @@
-// Profile Step 1 - Community & Birth Details
+// Profile Step 1 - Community & Birth Details (Maharashtra-focused)
+import {
+  RELIGIONS as MH_RELIGIONS,
+  CASTES as MH_CASTES,
+  SUB_CASTES as MH_SUB_CASTES,
+  GOTRAS as MH_GOTRAS,
+  RASHIS as MH_RASHIS,
+  NAKSHATRAS as MH_NAKSHATRAS,
+  MANGLIK_OPTIONS as MH_MANGLIK_OPTIONS,
+  MAHARASHTRA_CITIES
+} from '../constants/maharashtraProfileOptions'
 
-export const RELIGIONS = ['Hindu', 'Muslim', 'Christian', 'Sikh', 'Buddhist', 'Jain', 'Other']
+export { MAHARASHTRA_CITIES }
+export const RELIGIONS = MH_RELIGIONS
+export const CASTES = MH_CASTES
 
+// SUBCASTE_BY_CASTE: caste -> subcastes; components use SUBCASTE_BY_CASTE[caste] || ['Other']
+export const SUBCASTE_BY_CASTE = { ...MH_SUB_CASTES }
+
+// CASTE_BY_RELIGION for backward compatibility (religion-filtered caste options)
 export const CASTE_BY_RELIGION = {
-  Hindu: ['Brahmin', 'Kshatriya', 'Vaishya', 'Shudra', 'Other'],
-  Muslim: ['Sunni', 'Shia', 'Other'],
-  Christian: ['Catholic', 'Protestant', 'Orthodox', 'Other'],
-  Sikh: ['Jat', 'Khatri', 'Arora', 'Other'],
-  Buddhist: ['Theravada', 'Mahayana', 'Vajrayana', 'Other'],
-  Jain: ['Digambar', 'Shvetambar', 'Other'],
+  Hindu: ['Maratha', 'Kunbi', 'Brahmin', 'CKP (Chandraseniya Kayastha Prabhu)', 'Vaishya', 'Lingayat', 'Mali', 'Dhangar', 'Teli', 'Sonar', 'Lohar', 'Koli', 'Banjara', 'Matang', 'Mahar', 'Other'],
+  Muslim: ['Muslim Sunni', 'Muslim Shia', 'Other'],
+  Buddhist: MH_CASTES,
+  Jain: ['Jain', 'Other'],
+  Christian: ['Christian', 'Other'],
+  Sikh: MH_CASTES,
+  Parsi: MH_CASTES,
   Other: ['Other']
 }
 
-export const SUBCASTE_BY_CASTE = {
-  Brahmin: ['Iyer', 'Iyengar', 'Kanyakubja', 'Gaur', 'Maithil', 'Saraswat', 'Other'],
-  Kshatriya: ['Rajput', 'Maratha', 'Jat', 'Gurjar', 'Other'],
-  Vaishya: ['Agarwal', 'Gupta', 'Marwari', 'Other'],
-  Shudra: ['Other'],
-  Sunni: ['Hanafi', 'Shafi', 'Maliki', 'Hanbali', 'Other'],
-  Shia: ['Twelver', 'Ismaili', 'Other'],
-  Catholic: ['Other'],
-  Protestant: ['Other'],
-  Orthodox: ['Other'],
-  Jat: ['Other'],
-  Khatri: ['Other'],
-  Arora: ['Other'],
-  Theravada: ['Other'],
-  Mahayana: ['Other'],
-  Vajrayana: ['Other'],
-  Digambar: ['Other'],
-  Shvetambar: ['Other'],
-  Other: ['Other']
-}
-
-export const GOTRAS = ['Bharadwaj', 'Kashyap', 'Vashishtha', 'Vishwamitra', 'Gautam', 'Other']
-
-export const RASHIS = [
-  'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
-  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
-]
-
-export const NAKSHATRAS = [
-  'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu',
-  'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta',
-  'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Mula', 'Purva Ashadha',
-  'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada',
-  'Uttara Bhadrapada', 'Revati'
-]
-
-export const MANGLIK_OPTIONS = ['Yes', 'No', 'Unknown']
+export const GOTRAS = MH_GOTRAS
+export const RASHIS = MH_RASHIS
+export const NAKSHATRAS = MH_NAKSHATRAS
+export const MANGLIK_OPTIONS = MH_MANGLIK_OPTIONS
 
 // Profile Step 2 - Education & Employment
 

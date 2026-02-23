@@ -101,12 +101,31 @@ export const AuthProvider = ({ children }) => {
     return userProfile?.profileCompletion || 0
   }
 
-  // Update user profile in context
+  // Update user profile in context (shallow merge; for nested use full objects)
   const updateProfile = (profileData) => {
-    setUserProfile(prev => ({
-      ...prev,
-      ...profileData
-    }))
+    setUserProfile(prev => {
+      const next = { ...prev, ...profileData }
+      if (profileData.personal && prev?.personal) {
+        next.personal = { ...prev.personal, ...profileData.personal }
+      }
+      if (profileData.profile && prev?.profile) {
+        next.profile = { ...prev.profile, ...profileData.profile }
+      }
+      return next
+    })
+  }
+
+  // Refetch user profile from Firestore to keep app state in sync
+  const refreshUserProfile = async () => {
+    if (!currentUser) return
+    try {
+      const profileResult = await getUserProfile(currentUser.uid)
+      if (profileResult.success) {
+        setUserProfile(profileResult.data)
+      }
+    } catch (error) {
+      console.error('Error refreshing user profile:', error)
+    }
   }
 
   const value = {
@@ -128,13 +147,14 @@ export const AuthProvider = ({ children }) => {
     canAccessPremium,
     getProfileCompletion,
     updateProfile,
+    refreshUserProfile,
     setCurrentUser,
     setUserProfile
   }
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
@@ -12,9 +12,10 @@ import {
 } from '../../services/auth'
 import {
   RELIGIONS,
-  CASTE_BY_RELIGION,
+  CASTES,
   SUBCASTE_BY_CASTE,
   GOTRAS,
+  MAHARASHTRA_CITIES,
   RASHIS,
   NAKSHATRAS,
   MANGLIK_OPTIONS,
@@ -90,20 +91,33 @@ const ChipSelect = ({ label, options, selected = [], onChange }) => {
   )
 }
 
-const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false }) => {
-  const { currentUser, userProfile, updateProfile } = useAuth()
-  const [currentStep, setCurrentStep] = useState(1)
-  const [submitting, setSubmitting] = useState(false)
-  const [errors, setErrors] = useState({})
-  const [serverError, setServerError] = useState('')
-  const [uploadProgress, setUploadProgress] = useState(0)
+const GENDER_OPTIONS = [
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+  { value: 'other', label: 'Other' }
+]
 
+const getInitialFormData = (userProfile) => {
   const profile = userProfile?.profile || {}
-
-  const [formData, setFormData] = useState({
-    // Step 1
-    religion: profile.communityBirthDetails?.religion || '',
-    caste: profile.communityBirthDetails?.caste || '',
+  const personal = userProfile?.personal || {}
+  return {
+    // Personal (Basic Info)
+    name: personal.name || '',
+    age: personal.age ?? '',
+    gender: personal.gender || '',
+    location: (() => {
+      const loc = personal.location || ''
+      const matched = MAHARASHTRA_CITIES.find(c => c.toLowerCase() === loc.toLowerCase())
+      return matched || (loc ? 'Other' : '')
+    })(),
+    locationCustom: (() => {
+      const loc = personal.location || ''
+      const matched = MAHARASHTRA_CITIES.find(c => c.toLowerCase() === loc.toLowerCase())
+      return matched ? '' : loc
+    })(),
+    // Step 1 - Community & Birth
+    religion: profile.communityBirthDetails?.religion || personal.religion || '',
+    caste: profile.communityBirthDetails?.caste || personal.caste || '',
     subCaste: profile.communityBirthDetails?.subCaste || '',
     gotra: profile.communityBirthDetails?.gotra || '',
     rashi: profile.communityBirthDetails?.rashi || '',
@@ -111,7 +125,7 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
     manglik: profile.communityBirthDetails?.manglik || '',
     timeOfBirth: profile.communityBirthDetails?.timeOfBirth || '',
     placeOfBirth: profile.communityBirthDetails?.placeOfBirth || '',
-    // Step 2
+    // Step 2 - Education & Employment
     highestEducation: profile.educationEmployment?.highestEducation || '',
     degree: profile.educationEmployment?.degree || '',
     college: profile.educationEmployment?.college || '',
@@ -162,7 +176,31 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
     languagesKnown: profile.finalLifestyle?.languagesKnown || '',
     fitnessHabits: profile.finalLifestyle?.fitnessHabits || '',
     foodPreference: profile.finalLifestyle?.foodPreference || 'Home food'
-  })
+  }
+}
+
+const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false }) => {
+  const { currentUser, userProfile, updateProfile, refreshUserProfile } = useAuth()
+  const [currentStep, setCurrentStep] = useState(1)
+  const [submitting, setSubmitting] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [serverError, setServerError] = useState('')
+  const [uploadProgress, setUploadProgress] = useState(0)
+
+  const profile = userProfile?.profile || {}
+
+  const [formData, setFormData] = useState(() => getInitialFormData(userProfile || {}))
+  const prevOpenRef = useRef(false)
+
+  // Refresh formData when modal opens (not on every userProfile change during edit)
+  useEffect(() => {
+    const justOpened = isOpen && !prevOpenRef.current
+    prevOpenRef.current = isOpen
+    if (justOpened && userProfile) {
+      setFormData(getInitialFormData(userProfile))
+      setCurrentStep(1)
+    }
+  }, [isOpen, userProfile])
 
   const totalSteps = 6
 
@@ -172,8 +210,10 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
     setServerError('')
   }
 
-  const casteOptions = formData.religion ? (CASTE_BY_RELIGION[formData.religion] || ['Other']) : []
+  const casteOptions = CASTES
   const subCasteOptions = formData.caste ? (SUBCASTE_BY_CASTE[formData.caste] || ['Other']) : []
+  const locationOptions = [...MAHARASHTRA_CITIES, 'Other']
+  const preferredCityOptions = formData.preferredState === 'Maharashtra' ? MAHARASHTRA_CITIES : null
 
   const handleComplete = async () => {
     if (!validateStep(currentStep)) return
@@ -200,6 +240,7 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
       const completion = calculateProfileCompletion({ personal: userProfile?.personal, profile: fullProfile })
       await updateUserProfile(currentUser.uid, { profileCompletion: completion })
       updateProfile({ profileCompletion: completion })
+      await refreshUserProfile()
       onComplete?.()
       onClose()
     } catch (err) {
@@ -213,6 +254,13 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
     const e = {}
 
     if (step === 1) {
+      if (!formData.name?.trim()) e.name = 'Name is required'
+      const ageNum = Number(formData.age)
+      if (formData.age === '' || formData.age == null) e.age = 'Age is required'
+      else if (!Number.isFinite(ageNum) || ageNum < 18 || ageNum > 70) e.age = 'Age must be between 18 and 70'
+      if (!formData.gender) e.gender = 'Gender is required'
+      if (!formData.location) e.location = 'Location is required'
+      if (formData.location === 'Other' && !formData.locationCustom?.trim()) e.locationCustom = 'Please enter your location'
       if (!formData.religion) e.religion = 'Religion is required'
       if (formData.religion && formData.religion !== 'Other' && !formData.caste) {
         e.caste = 'Caste is required'
@@ -364,7 +412,23 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
         setServerError(res.error || 'Failed to save.')
         return
       }
+      // Step 1: also persist personal (name, age, gender, location) to Firestore
+      if (currentStep === 1) {
+        const locationValue = formData.location === 'Other' ? (formData.locationCustom?.trim() || '') : (formData.location || '')
+        const personalRes = await updateUserProfile(currentUser.uid, {
+          personal: {
+            name: formData.name?.trim(),
+            age: Number(formData.age),
+            gender: formData.gender,
+            location: locationValue
+          }
+        })
+        if (personalRes.success) {
+          updateProfile({ personal: personalRes.data?.personal || { name: formData.name, age: formData.age, gender: formData.gender, location: formData.location } })
+        }
+      }
       updateProfile({ profile: { ...profile, [key]: payload } })
+      await refreshUserProfile()
       setCurrentStep((s) => Math.min(s + 1, totalSteps))
     } catch (err) {
       setServerError(err.message || 'Something went wrong.')
@@ -388,13 +452,23 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
     >
       <div className="space-y-6">
         <ProfileStepLayout currentStep={currentStep} totalSteps={totalSteps}>
-          {/* Step 1: Community & Birth */}
+          {/* Step 1: Basic Info & Community & Birth */}
           {currentStep === 1 && (
             <>
+              <h3 className="text-xl font-semibold text-primary-maroon mb-4">Basic Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <Input label="Full Name" required value={formData.name} onChange={(e) => setField('name', e.target.value)} error={errors.name} placeholder="Enter your name" />
+                <Input label="Age" required type="number" value={formData.age} onChange={(e) => setField('age', e.target.value)} error={errors.age} placeholder="18" min={18} max={70} />
+                <SelectField label="Gender" required value={formData.gender} onChange={(e) => setField('gender', e.target.value)} error={errors.gender} options={GENDER_OPTIONS} />
+                <SelectField label="Location" required value={formData.location} onChange={(e) => { setField('location', e.target.value); if (e.target.value !== 'Other') setField('locationCustom', '') }} error={errors.location} options={locationOptions} placeholder="Select city" />
+                {formData.location === 'Other' && (
+                  <Input label="Location (Custom)" required value={formData.locationCustom} onChange={(e) => setField('locationCustom', e.target.value)} error={errors.locationCustom} placeholder="City, State" className="sm:col-span-2" />
+                )}
+              </div>
               <h3 className="text-xl font-semibold text-primary-maroon mb-4">Community & Birth Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <SelectField label="Religion" required value={formData.religion} onChange={(e) => setField('religion', e.target.value)} error={errors.religion} options={RELIGIONS} />
-                <SelectField label="Caste" required={formData.religion !== 'Other'} value={formData.caste} onChange={(e) => { setField('caste', e.target.value); setField('subCaste', '') }} error={errors.caste} options={casteOptions} />
+                <SelectField label="Caste" required={formData.religion && formData.religion !== 'Other'} value={formData.caste} onChange={(e) => { setField('caste', e.target.value); setField('subCaste', '') }} error={errors.caste} options={casteOptions} />
                 <SelectField label="Sub Caste" value={formData.subCaste} onChange={(e) => setField('subCaste', e.target.value)} options={subCasteOptions} />
                 <SelectField label="Gotra" value={formData.gotra} onChange={(e) => setField('gotra', e.target.value)} options={GOTRAS} />
                 <SelectField label="Rashi (Zodiac)" value={formData.rashi} onChange={(e) => setField('rashi', e.target.value)} options={RASHIS} />
@@ -501,7 +575,11 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <SelectField label="Country" value={formData.preferredCountry} onChange={(e) => setField('preferredCountry', e.target.value)} options={WORK_COUNTRIES} />
                   <SelectField label="State" value={formData.preferredState} onChange={(e) => setField('preferredState', e.target.value)} options={INDIAN_STATES} />
-                  <Input label="City" value={formData.preferredCity} onChange={(e) => setField('preferredCity', e.target.value)} />
+                  {preferredCityOptions ? (
+                    <SelectField label="City" value={formData.preferredCity} onChange={(e) => setField('preferredCity', e.target.value)} options={preferredCityOptions} placeholder="Select city" />
+                  ) : (
+                    <Input label="City" value={formData.preferredCity} onChange={(e) => setField('preferredCity', e.target.value)} placeholder="City" />
+                  )}
                 </div>
                 <SelectField label="Preferred Income Range" value={formData.preferredIncomeRange} onChange={(e) => setField('preferredIncomeRange', e.target.value)} options={INCOME_RANGES} />
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

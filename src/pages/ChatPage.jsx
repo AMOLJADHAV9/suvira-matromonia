@@ -106,7 +106,7 @@ const ChatPage = () => {
   const isList = !partnerId
 
   return (
-    <div className="min-h-screen bg-primary-cream/40 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-primary-cream to-white flex flex-col">
       <Header />
       <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col px-4 py-6">
         <h1 className="text-2xl font-serif font-bold text-primary-maroon mb-4">
@@ -143,7 +143,7 @@ const ChatPage = () => {
                     onClick={() => navigate(`/chat/${uid}`)}
                     className="w-full bg-white rounded-xl p-4 border border-primary-gold/20 shadow-sm hover:shadow-md transition-all text-left flex items-center gap-4"
                   >
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-theme-pink/20 to-theme-purple/20 flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary-maroon/20 to-primary-gold/20 flex-shrink-0">
                       {prof && getProfilePhotoUrl(prof) ? (
                         <img src={getProfilePhotoUrl(prof)} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -204,7 +204,7 @@ const ChatPage = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/interests')}
-                  className="mt-4 text-theme-pink font-medium hover:underline"
+                  className="mt-4 text-primary-maroon font-medium hover:underline"
                 >
                   Check My Interests
                 </button>
@@ -226,7 +226,7 @@ const ChatPage = () => {
                       <div
                         className={`max-w-[75%] px-4 py-2 rounded-2xl ${
                           m.senderId === currentUser.uid
-                            ? 'bg-gradient-to-r from-[#ff2f92] to-[#8a2be2] text-white rounded-br-md'
+                            ? 'bg-gradient-to-r from-primary-maroon to-primary-gold text-white rounded-br-md'
                             : 'bg-gray-100 text-gray-800 rounded-bl-md'
                         }`}
                       >
@@ -244,13 +244,13 @@ const ChatPage = () => {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       placeholder="Type a message..."
-                      className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-theme-pink focus:outline-none"
+                      className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary-maroon focus:ring-2 focus:ring-primary-gold/30 focus:outline-none"
                       disabled={!chatUnlocked || sending}
                     />
                     <button
                       type="submit"
                       disabled={!input?.trim() || sending}
-                      className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#ff2f92] to-[#8a2be2] text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                      className="px-5 py-3 rounded-xl bg-gradient-to-r from-primary-maroon to-primary-gold text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
                     >
                       <FaPaperPlane /> Send
                     </button>

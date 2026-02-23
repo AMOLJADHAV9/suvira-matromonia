@@ -2,7 +2,9 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import Header from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
+import WeddingGallery from '../components/WeddingGallery'
 import { FaShieldAlt, FaUsers, FaHeart, FaAward } from 'react-icons/fa'
+import { galleryImages } from '../assets/wedding'
 
 const AboutPage = () => {
   const features = [
@@ -32,7 +34,7 @@ const AboutPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-primary-cream to-white">
       <Header />
       
-      <section className="bg-gradient-to-r from-primary-maroon to-primary-maroon/90 text-white py-20">
+      <section className="bg-gradient-to-r from-primary-maroon to-primary-maroon/90 text-white py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -40,7 +42,7 @@ const AboutPage = () => {
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-6">
               About Suvira Matrimony
             </h1>
             <p className="text-xl md:text-2xl max-w-3xl mx-auto opacity-90">
@@ -49,6 +51,35 @@ const AboutPage = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Second Banner - Wedding Image Strip */}
+      <motion.section
+        className="relative overflow-hidden"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7 }}
+      >
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-0">
+          {galleryImages.slice(0, 3).map((src, index) => (
+            <motion.div
+              key={`strip-${index}`}
+              className="relative h-48 sm:h-64 md:h-80 overflow-hidden"
+              initial={{ opacity: 0, scale: 0.98 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <img
+                src={src}
+                alt={`Wedding moment ${index + 1}`}
+                className="w-full h-full object-cover object-center"
+              />
+              <div className="absolute inset-0 bg-primary-maroon/10 hover:bg-transparent transition-colors duration-300" />
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
 
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

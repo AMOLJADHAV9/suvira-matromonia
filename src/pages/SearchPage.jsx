@@ -10,7 +10,7 @@ import ProfileCard from '../components/profile/ProfileCard'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import { FaSearch, FaFilter, FaTimes, FaExclamationTriangle } from 'react-icons/fa'
-import { RELIGIONS } from '../utils/profileConstants'
+import { RELIGIONS, CASTES, MAHARASHTRA_CITIES, HIGHEST_EDUCATION } from '../utils/profileConstants'
 
 const SORT_OPTIONS = [
   { value: 'name_asc', label: 'Name (A–Z)' },
@@ -114,10 +114,10 @@ const SearchPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white/80 to-purple-50/50 py-8">
+      <div className="min-h-screen bg-gradient-to-b from-primary-cream to-white py-8">
         <Header />
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center min-h-[60vh]">
-          <div className="w-14 h-14 rounded-full border-4 border-theme-pink/30 border-t-theme-purple animate-spin" />
+          <div className="w-14 h-14 rounded-full border-4 border-primary-maroon/30 border-t-primary-gold animate-spin" />
           <p className="mt-4 text-gray-600">Loading matches...</p>
         </div>
       </div>
@@ -125,14 +125,14 @@ const SearchPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white/80 to-purple-50/50">
+    <div className="min-h-screen bg-gradient-to-b from-primary-cream to-white">
       <Header />
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4">
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-3xl md:text-4xl font-serif font-bold bg-gradient-to-r from-theme-pink to-theme-purple bg-clip-text text-transparent mb-2">
+                <h1 className="text-3xl md:text-4xl font-serif font-bold text-primary-maroon mb-2">
                   Find Your Perfect Match
                 </h1>
                 <p className="text-gray-600">
@@ -147,14 +147,14 @@ const SearchPage = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-theme-pink focus:outline-none focus:ring-2 focus:ring-theme-pink/20 bg-white text-gray-700 font-medium"
+                    className="px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-primary-maroon focus:outline-none focus:ring-2 focus:ring-primary-gold/30 bg-white text-gray-700 font-medium"
                   >
                   {SORT_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
                 </div>
-                <Button variant="outline-theme" onClick={() => setShowFilters(!showFilters)} icon={showFilters ? <FaTimes /> : <FaFilter />}>
+                <Button variant="outline" onClick={() => setShowFilters(!showFilters)} icon={showFilters ? <FaTimes /> : <FaFilter />}>
                   {showFilters ? 'Hide Filters' : 'Show Filters'}
                 </Button>
               </div>
@@ -185,7 +185,7 @@ const SearchPage = () => {
                     <select
                       value={filters.religion}
                       onChange={(e) => setFilter('religion', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-theme-pink bg-white"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-primary-maroon focus:ring-primary-gold/30 bg-white"
                     >
                       <option value="">Any religion</option>
                       {RELIGIONS.map((r) => (
@@ -193,9 +193,46 @@ const SearchPage = () => {
                       ))}
                     </select>
                   </div>
-                  <Input label="Caste" value={filters.caste} onChange={(e) => setFilter('caste', e.target.value)} placeholder="Filter by caste" />
-                  <Input label="Location" value={filters.location} onChange={(e) => setFilter('location', e.target.value)} placeholder="City or State" />
-                  <Input label="Education" value={filters.education} onChange={(e) => setFilter('education', e.target.value)} placeholder="Education level" />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Caste</label>
+                    <select
+                      value={filters.caste}
+                      onChange={(e) => setFilter('caste', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-primary-maroon focus:ring-primary-gold/30 bg-white"
+                    >
+                      <option value="">Any caste</option>
+                      {CASTES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                    <select
+                      value={filters.location}
+                      onChange={(e) => setFilter('location', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-primary-maroon focus:ring-primary-gold/30 bg-white"
+                    >
+                      <option value="">Any location</option>
+                      {MAHARASHTRA_CITIES.map((city) => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Education</label>
+                    <select
+                      value={filters.education}
+                      onChange={(e) => setFilter('education', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-primary-maroon focus:ring-primary-gold/30 bg-white"
+                    >
+                      <option value="">Any education</option>
+                      {HIGHEST_EDUCATION.map((edu) => (
+                        <option key={edu} value={edu}>{edu}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="flex items-end">
                     <Button variant="ghost" onClick={clearFilters} className="w-full">Clear Filters</Button>
                   </div>
@@ -204,7 +241,7 @@ const SearchPage = () => {
             )}
 
             <div className="text-gray-600 mb-4">
-              Found <span className="font-semibold text-theme-purple">{profiles.length}</span> matching profiles
+              Found <span className="font-semibold text-primary-maroon">{profiles.length}</span> matching profiles
             </div>
           </div>
 

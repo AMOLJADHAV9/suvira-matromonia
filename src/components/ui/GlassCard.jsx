@@ -2,7 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 
 /**
- * Glassmorphism card with pink-purple theme
+ * Glassmorphism card with maroon-gold theme (matches landing page)
  * Rounded corners, soft shadows, backdrop blur
  */
 const GlassCard = ({
@@ -19,11 +19,11 @@ const GlassCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
       className={`
-        bg-white/70 backdrop-blur-xl rounded-2xl
-        border border-white/40
-        shadow-[0_8px_32px_0_rgba(255,47,146,0.08),0_2px_8px_rgba(138,43,226,0.06)]
+        bg-white/90 backdrop-blur-xl rounded-2xl
+        border border-primary-gold/20
+        shadow-premium
         ${padding}
-        ${hover ? 'hover:shadow-[0_12px_40px_0_rgba(255,47,146,0.12)] hover:-translate-y-0.5 transition-all duration-300' : ''}
+        ${hover ? 'hover:shadow-glow hover:-translate-y-0.5 transition-all duration-300' : ''}
         ${onClick ? 'cursor-pointer' : ''}
         ${className}
       `}

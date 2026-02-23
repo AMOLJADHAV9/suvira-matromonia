@@ -203,18 +203,29 @@ export const calculateProfileCompletion = (profileData) => {
   return Math.round((filled.length / checks.length) * 100)
 }
 
-// Update User Profile
+// Update User Profile (deep merge for personal and profile nested objects)
 export const updateUserProfile = async (userId, profileData) => {
   try {
-    // Get current profile to calculate completion
     const currentProfile = await getUserProfile(userId)
     const existingData = currentProfile.success ? currentProfile.data : {}
-    
-    // Merge with existing data
+
+    // Deep merge personal if passed
+    const mergedPersonal = profileData.personal
+      ? { ...(existingData.personal || {}), ...profileData.personal }
+      : existingData.personal
+
+    // Deep merge profile if passed
+    const mergedProfile = profileData.profile
+      ? { ...(existingData.profile || {}), ...profileData.profile }
+      : existingData.profile
+
+    const mergedData = { ...existingData, ...profileData }
+    if (mergedPersonal !== undefined) mergedData.personal = mergedPersonal
+    if (mergedProfile !== undefined) mergedData.profile = mergedProfile
+
     const updatedData = {
-      ...existingData,
-      ...profileData,
-      profileCompletion: profileData.profileCompletion || calculateProfileCompletion({ ...existingData, ...profileData })
+      ...mergedData,
+      profileCompletion: profileData.profileCompletion ?? calculateProfileCompletion(mergedData)
     }
 
     const userRef = doc(db, 'users', userId)
@@ -244,6 +255,15 @@ export const saveProfileStep = async (userId, stepKey, stepData, nextStep) => {
       ...existingData,
       profile: updatedProfile,
       profileUpdatedAt: new Date()
+    }
+
+    // Sync religion/caste to personal so search and profile views stay in sync
+    if (stepKey === 'communityBirthDetails' && (stepData.religion || stepData.caste)) {
+      updatedData.personal = {
+        ...(existingData.personal || {}),
+        ...(stepData.religion != null && stepData.religion !== '' && { religion: stepData.religion }),
+        ...(stepData.caste != null && stepData.caste !== '' && { caste: stepData.caste })
+      }
     }
 
     await updateDoc(doc(db, 'users', userId), updatedData)

@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Button from '../ui/Button'
 import { FaCrown, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa'
+import { cornerFlowerImage } from '../../assets/wedding'
 
 const Header = () => {
   const { isAuthenticated, isAdmin, isPremiumUser, userProfile } = useAuth()
@@ -36,8 +37,21 @@ const Header = () => {
   }
 
   return (
-    <header className="bg-white shadow-lg sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-white shadow-lg sticky top-0 z-40 relative overflow-hidden">
+      {/* Corner flowers - top left & top right */}
+      <img
+        src={cornerFlowerImage}
+        alt=""
+        className="absolute top-0 left-0 h-20 sm:h-24 lg:h-28 w-auto object-contain object-left-top pointer-events-none"
+        aria-hidden
+      />
+      <img
+        src={cornerFlowerImage}
+        alt=""
+        className="absolute top-0 right-0 h-20 sm:h-24 lg:h-28 w-auto object-contain object-right-top pointer-events-none scale-x-[-1]"
+        aria-hidden
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <motion.div 

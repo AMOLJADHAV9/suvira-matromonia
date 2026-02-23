@@ -29,10 +29,10 @@ const InterestCard = ({ interest, profile, type, onAccept, onReject, loading }) 
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl p-5 border border-primary-gold/20 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row gap-4 items-center"
+        className="bg-white rounded-2xl p-5 border border-primary-gold/30 shadow-premium hover:shadow-glow transition-shadow flex flex-col sm:flex-row gap-4 items-center"
     >
       <div
-        className="w-20 h-20 rounded-xl bg-gradient-to-br from-theme-pink/20 to-theme-purple/20 flex-shrink-0 overflow-hidden cursor-pointer"
+        className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary-maroon/20 to-primary-gold/20 flex-shrink-0 overflow-hidden cursor-pointer"
         onClick={() => navigate(`/profile/${profile?.id}`)}
         role="button"
         tabIndex={0}
@@ -71,13 +71,12 @@ const InterestCard = ({ interest, profile, type, onAccept, onReject, loading }) 
         {type === 'incoming' && interest.status === 'pending' && (
           <>
             <Button
-              variant="theme"
+              variant="primary"
               size="sm"
               onClick={() => onAccept(interest.id)}
               loading={loading}
               disabled={loading}
               icon={<FaCheck />}
-              className="bg-gradient-to-r from-[#ff2f92] to-[#8a2be2] text-white"
             >
               Accept
             </Button>
@@ -174,7 +173,7 @@ const InterestPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-primary-cream/40">
+    <div className="min-h-screen bg-gradient-to-b from-primary-cream to-white">
       <Header />
       <div className="max-w-4xl mx-auto px-4 py-10">
         <h1 className="text-3xl font-serif font-bold text-primary-maroon mb-2">
@@ -248,8 +247,8 @@ const InterestPage = () => {
                 <FaPaperPlane className="text-4xl text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-600">No sent interests yet</p>
                 <Button
-                  variant="theme"
-                  className="mt-4 bg-gradient-to-r from-[#ff2f92] to-[#8a2be2]"
+                  variant="primary"
+                  className="mt-4"
                   onClick={() => navigate('/search')}
                 >
                   Find Matches

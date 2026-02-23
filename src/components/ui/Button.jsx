@@ -17,9 +17,9 @@ const Button = ({
   
   const variants = {
     primary: 'bg-gradient-to-r from-primary-gold to-amber-600 text-white shadow-lg hover:shadow-xl focus:ring-primary-gold',
-    theme: 'bg-gradient-to-r from-theme-pink to-theme-purple text-white shadow-soft hover:shadow-glass-lg focus:ring-theme-pink',
+    theme: 'bg-gradient-to-r from-primary-maroon to-primary-gold text-white shadow-premium hover:shadow-glow focus:ring-primary-gold',
     outline: 'border-2 border-primary-gold text-primary-gold hover:bg-primary-gold hover:text-white focus:ring-primary-gold',
-    'outline-theme': 'border-2 border-theme-pink text-theme-pink hover:bg-theme-pink hover:text-white focus:ring-theme-pink',
+    'outline-theme': 'border-2 border-primary-maroon text-primary-maroon hover:bg-primary-maroon hover:text-white focus:ring-primary-maroon',
     secondary: 'bg-white text-primary-maroon border-2 border-primary-maroon hover:bg-primary-maroon hover:text-white focus:ring-primary-maroon',
     danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
     ghost: 'text-primary-maroon hover:bg-primary-maroon/10 focus:ring-primary-maroon'

@@ -5,9 +5,11 @@ import { FaCheck, FaShieldAlt, FaLock, FaQuoteLeft, FaStar } from 'react-icons/f
 import Button from '../components/ui/Button'
 import Header from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
+import WeddingGallery from '../components/WeddingGallery'
 import { useAuth } from '../context/AuthContext'
 import { useAllProfiles } from '../hooks/useAllProfiles'
 import ProfileCard from '../components/profile/ProfileCard'
+import { heroBannerImages, galleryImages, secondBannerImage } from '../assets/wedding'
 
 const LandingPage = () => {
   const navigate = useNavigate()
@@ -18,12 +20,7 @@ const LandingPage = () => {
     enabled: !isAuthenticated()  // Only fetch all users when logged out
   })
 
-  // Hero banner carousel images
-  const bannerImages = [
-    'https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80',
-    // 'https://images.unsplash.com/photo-1520854222734-252b691c6f3d?w=1920&q=80',
-    // 'https://images.unsplash.com/photo-1529634806980-cd3e6b67a0c5?w=1920&q=80'
-  ]
+  const bannerImages = heroBannerImages
 
   const [currentBanner, setCurrentBanner] = useState(0)
 
@@ -51,16 +48,19 @@ const LandingPage = () => {
       <Header />
       
       {/* Hero Section with Carousel Banner */}
-      <section className="relative overflow-hidden min-h-[90vh] flex items-center">
+      <section className="relative overflow-hidden min-h-[70vh] sm:min-h-[80vh] lg:min-h-[90vh] flex items-center">
         {/* Background Carousel */}
         <div className="absolute inset-0 overflow-hidden">
           {bannerImages.map((src, index) => (
             <motion.div
-              key={src}
+              key={`${src}-${index}`}
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{ backgroundImage: `url(${src})` }}
-              initial={{ opacity: index === currentBanner ? 1 : 0 }}
-              animate={{ opacity: index === currentBanner ? 1 : 0 }}
+              initial={{ opacity: index === currentBanner ? 1 : 0, scale: 1 }}
+              animate={{
+                opacity: index === currentBanner ? 1 : 0,
+                scale: index === currentBanner ? 1.02 : 1
+              }}
               transition={{ duration: 1.2 }}
             />
           ))}
@@ -170,6 +170,35 @@ const LandingPage = () => {
           </svg>
         </div>
       </section>
+
+      {/* Second Banner - Celebrating Indian Traditions */}
+      <motion.section
+        className="relative overflow-hidden"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7 }}
+      >
+        <div className="relative h-64 sm:h-80 md:h-[28rem] lg:h-[32rem] w-full">
+          <img
+            src={secondBannerImage}
+            alt="Angathi Rasam wedding ritual"
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <motion.p
+              className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-white drop-shadow-lg text-center px-4"
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Celebrating Indian Traditions
+            </motion.p>
+          </div>
+        </div>
+      </motion.section>
       
       {/* Why Choose Us Section */}
       <section className="py-20 bg-white">
@@ -233,9 +262,30 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Wedding Gallery Grid */}
+      <section className="py-20 bg-primary-cream">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary-maroon mb-4">
+              Our Wedding Moments
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Celebrating love and tradition through beautiful Indian weddings
+            </p>
+          </motion.div>
+          <WeddingGallery images={galleryImages} columns={4} />
+        </div>
+      </section>
       
       {/* Featured Matches Section */}
-      <section className="py-20 bg-primary-cream">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
             className="text-center mb-16"
@@ -267,6 +317,7 @@ const LandingPage = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ y: -4 }}
                 >
                   <ProfileCard profile={profile} />
                 </motion.div>

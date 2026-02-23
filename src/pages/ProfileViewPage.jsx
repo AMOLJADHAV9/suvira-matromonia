@@ -346,13 +346,13 @@ const ProfileViewPage = () => {
                     )}
                     {!isAdmin() && !interest && (
                       <Button
-                        variant="theme"
+                        variant="primary"
                         size="lg"
                         icon={<FaHandshake />}
                         onClick={handleSendInterest}
                         loading={interestLoading}
                         disabled={interestLoading}
-                        className="bg-gradient-to-r from-[#ff2f92] to-[#8a2be2] text-white border-0 hover:opacity-90 transition-all duration-300 disabled:opacity-70"
+                        className="bg-gradient-to-r from-primary-maroon to-primary-gold text-white border-0 hover:opacity-90 transition-all duration-300 disabled:opacity-70"
                       >
                         Send Interest
                       </Button>

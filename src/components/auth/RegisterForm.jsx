@@ -3,6 +3,7 @@ import Input from '../ui/Input'
 import Button from '../ui/Button'
 import { registerUser } from '../../services/auth'
 import { validateField } from '../../utils/validation'
+import { RELIGIONS, CASTES, MAHARASHTRA_CITIES } from '../../utils/profileConstants'
 
 const initialForm = {
   name: '',
@@ -11,6 +12,7 @@ const initialForm = {
   religion: '',
   caste: '',
   location: '',
+  locationCustom: '',
   email: '',
   password: '',
   confirmPassword: ''
@@ -62,6 +64,10 @@ const RegisterForm = ({ onSuccess }) => {
     []
   )
 
+  const religionOptions = useMemo(() => RELIGIONS.map(r => ({ value: r, label: r })), [])
+  const casteOptions = useMemo(() => CASTES.map(c => ({ value: c, label: c })), [])
+  const locationOptions = useMemo(() => [...MAHARASHTRA_CITIES.map(c => ({ value: c, label: c })), { value: 'Other', label: 'Other' }], [])
+
   const setField = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }))
     setErrors(prev => ({ ...prev, [key]: '' }))
@@ -85,7 +91,8 @@ const RegisterForm = ({ onSuccess }) => {
     if (!form.gender) nextErrors.gender = 'This field is required'
     if (!form.religion.trim()) nextErrors.religion = 'This field is required'
     if (!form.caste.trim()) nextErrors.caste = 'This field is required'
-    if (!form.location.trim()) nextErrors.location = 'This field is required'
+    if (!form.location) nextErrors.location = 'This field is required'
+    if (form.location === 'Other' && !form.locationCustom?.trim()) nextErrors.locationCustom = 'Please enter your location'
 
     const emailErrors = validateField('email', form.email, ['required', 'email'])
     if (emailErrors.length) nextErrors.email = emailErrors[0]
@@ -112,20 +119,21 @@ const RegisterForm = ({ onSuccess }) => {
 
     setSubmitting(true)
     try {
+      const locationValue = form.location === 'Other' ? form.locationCustom.trim() : form.location
       const userData = {
         name: form.name.trim(),
         age: Number(form.age),
         gender: form.gender,
         religion: form.religion.trim(),
         caste: form.caste.trim(),
-        location: form.location.trim(),
+        location: locationValue,
         personal: {
           name: form.name.trim(),
           age: Number(form.age),
           gender: form.gender,
           religion: form.religion.trim(),
           caste: form.caste.trim(),
-          location: form.location.trim()
+          location: locationValue
         }
       }
 
@@ -175,32 +183,44 @@ const RegisterForm = ({ onSuccess }) => {
           error={errors.gender}
           options={genderOptions}
         />
-        <Input
-          label="Location"
-          required
-          value={form.location}
-          onChange={(e) => setField('location', e.target.value)}
-          error={errors.location}
-          placeholder="City, State"
-        />
+        <div className="space-y-2">
+          <SelectField
+            label="Location"
+            required
+            value={form.location}
+            onChange={(e) => { setField('location', e.target.value); if (e.target.value !== 'Other') setField('locationCustom', '') }}
+            error={errors.location}
+            options={locationOptions}
+          />
+          {form.location === 'Other' && (
+            <Input
+              label="Location (Custom)"
+              required
+              value={form.locationCustom}
+              onChange={(e) => setField('locationCustom', e.target.value)}
+              error={errors.locationCustom}
+              placeholder="City, State"
+            />
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input
+        <SelectField
           label="Religion"
           required
           value={form.religion}
           onChange={(e) => setField('religion', e.target.value)}
           error={errors.religion}
-          placeholder="e.g. Hindu"
+          options={religionOptions}
         />
-        <Input
+        <SelectField
           label="Caste"
           required
           value={form.caste}
           onChange={(e) => setField('caste', e.target.value)}
           error={errors.caste}
-          placeholder="e.g. Brahmin"
+          options={casteOptions}
         />
       </div>
 

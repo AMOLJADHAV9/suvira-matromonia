@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa'
+import { cornerFlowerImage } from '../../assets/wedding'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
@@ -29,8 +30,21 @@ const Footer = () => {
   }
 
   return (
-    <footer className="bg-gradient-maroon text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <footer className="bg-gradient-maroon text-white relative overflow-hidden">
+      {/* Corner flowers - top left & top right */}
+      <img
+        src={cornerFlowerImage}
+        alt=""
+        className="absolute top-0 left-0 h-24 sm:h-32 lg:h-40 w-auto object-contain object-left-top pointer-events-none"
+        aria-hidden
+      />
+      <img
+        src={cornerFlowerImage}
+        alt=""
+        className="absolute top-0 right-0 h-24 sm:h-32 lg:h-40 w-auto object-contain object-right-top pointer-events-none scale-x-[-1]"
+        aria-hidden
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Company Info */}
           <motion.div 

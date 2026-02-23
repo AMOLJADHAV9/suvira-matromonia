@@ -78,13 +78,13 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white/80 to-purple-50/50">
+    <div className="min-h-screen bg-gradient-to-b from-primary-cream to-white">
       <Header />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-serif font-bold bg-gradient-to-r from-theme-pink to-theme-purple bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl font-serif font-bold text-primary-maroon mb-2">
                 Welcome back, {userProfile?.personal?.name || 'User'}!
               </h1>
               <p className="text-gray-600">Manage your profile and find your perfect match</p>
@@ -94,10 +94,10 @@ const DashboardPage = () => {
         </div>
 
         {profileCompletion < 100 && (
-          <GlassCard className="mb-6 bg-gradient-to-r from-theme-pink/10 to-theme-purple/10 border-theme-pink/20">
+          <GlassCard className="mb-6 bg-primary-cream/50 border border-primary-gold/20">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                <h3 className="text-lg font-semibold text-primary-maroon mb-2">
                   Complete Your Profile
                 </h3>
                 <p className="text-gray-600 mb-3">
@@ -105,7 +105,7 @@ const DashboardPage = () => {
                 </p>
                 <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
                   <div
-                    className="bg-gradient-to-r from-theme-pink to-theme-purple h-3 rounded-full transition-all duration-300"
+                    className="bg-gradient-to-r from-primary-maroon to-primary-gold h-3 rounded-full transition-all duration-300"
                     style={{ width: `${profileCompletion}%` }}
                   />
                 </div>
@@ -127,8 +127,8 @@ const DashboardPage = () => {
                   {userProfile?.stats?.profileViews || 0}
                 </p>
               </div>
-              <div className="p-3 bg-theme-pink/10 rounded-full">
-                <FaUser className="text-theme-pink text-xl" />
+              <div className="p-3 bg-primary-maroon/10 rounded-full">
+                <FaUser className="text-primary-maroon text-xl" />
               </div>
             </div>
           </GlassCard>
@@ -141,8 +141,8 @@ const DashboardPage = () => {
                   {userProfile?.stats?.interestsReceived || 0}
                 </p>
               </div>
-              <div className="p-3 bg-pink-100 rounded-full">
-                <FaHeart className="text-pink-600 text-xl" />
+              <div className="p-3 bg-primary-maroon/10 rounded-full">
+                <FaHeart className="text-primary-maroon text-xl" />
               </div>
             </div>
           </GlassCard>
@@ -155,8 +155,8 @@ const DashboardPage = () => {
                   {userProfile?.stats?.interestsSent || 0}
                 </p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <FaHeart className="text-blue-600 text-xl" />
+              <div className="p-3 bg-primary-gold/20 rounded-full">
+                <FaHeart className="text-primary-gold text-xl" />
               </div>
             </div>
           </GlassCard>
@@ -169,37 +169,18 @@ const DashboardPage = () => {
                   {userProfile?.stats?.matches || 0}
                 </p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <FaCheckCircle className="text-green-600 text-xl" />
+              <div className="p-3 bg-primary-gold/20 rounded-full">
+                <FaCheckCircle className="text-primary-maroon text-xl" />
               </div>
             </div>
           </GlassCard>
         </div>
 
-        {/* Suggested Matches - opposite gender profiles */}
-        {suggestedMatches.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-serif font-bold text-primary-maroon">
-                Suggested Matches
-              </h2>
-              <Button variant="outline" size="sm" onClick={() => navigate('/search')}>
-                View All
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-              {suggestedMatches.map((profile) => (
-                <ProfileCard key={profile.id} profile={profile} compact showActions={false} />
-              ))}
-            </div>
-          </div>
-        )}
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <GlassCard className="cursor-pointer" onClick={() => navigate('/search')}>
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-theme-pink/10 rounded-xl">
-                <FaSearch className="text-theme-pink text-2xl" />
+              <div className="p-4 bg-primary-maroon/10 rounded-xl">
+                <FaSearch className="text-primary-maroon text-2xl" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-1">Search Matches</h3>
@@ -210,8 +191,8 @@ const DashboardPage = () => {
 
           <GlassCard className="cursor-pointer" onClick={() => navigate('/interests')}>
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-theme-pink/10 rounded-xl">
-                <FaHeart className="text-theme-pink text-2xl" />
+              <div className="p-4 bg-primary-maroon/10 rounded-xl">
+                <FaHeart className="text-primary-maroon text-2xl" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-1">My Interests</h3>
@@ -223,8 +204,8 @@ const DashboardPage = () => {
           {!isPremiumUser() && (
             <GlassCard className="cursor-pointer" onClick={() => navigate('/subscription')}>
               <div className="flex items-center gap-4">
-                <div className="p-4 bg-yellow-100 rounded-xl">
-                  <FaCrown className="text-yellow-600 text-2xl" />
+                <div className="p-4 bg-primary-gold/20 rounded-xl">
+                  <FaCrown className="text-primary-gold text-2xl" />
                 </div>
                 <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-1">Go Premium</h3>
@@ -246,7 +227,7 @@ const DashboardPage = () => {
               )}
             </div>
             <div className="flex flex-col sm:flex-row gap-4 mb-4">
-              <div className="flex-shrink-0 w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-theme-pink to-theme-purple flex items-center justify-center">
+              <div className="flex-shrink-0 w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-primary-maroon to-primary-gold flex items-center justify-center">
                 {(userProfile?.profile?.lifestyleHabits?.profilePhotoUrl || userProfile?.profilePhotoUrl) ? (
                   <img
                     src={userProfile.profile?.lifestyleHabits?.profilePhotoUrl || userProfile.profilePhotoUrl}
@@ -298,7 +279,7 @@ const DashboardPage = () => {
                 </div>
               )}
             </div>
-            <Button variant="outline-theme" className="w-full mt-4" onClick={() => setShowProfileModal(true)}>
+            <Button variant="outline" className="w-full mt-4" onClick={() => setShowProfileModal(true)}>
               <FaEdit className="mr-2" />
               Edit Profile
             </Button>
@@ -337,13 +318,32 @@ const DashboardPage = () => {
               </div>
             </div>
             {!isPremiumUser() && (
-              <Button variant="theme" className="w-full mt-4" onClick={() => navigate('/subscription')}>
+              <Button variant="primary" className="w-full mt-4" onClick={() => navigate('/subscription')}>
                 <FaCrown className="mr-2" />
                 Upgrade to Premium
               </Button>
             )}
           </GlassCard>
         </div>
+
+        {/* Suggested Matches - opposite gender profiles, after Profile Overview & Account Status */}
+        {suggestedMatches.length > 0 && (
+          <div className="mt-10">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-serif font-bold text-primary-maroon">
+                Suggested Matches
+              </h2>
+              <Button variant="outline" size="sm" onClick={() => navigate('/search')}>
+                View All
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+              {suggestedMatches.map((profile) => (
+                <ProfileCard key={profile.id} profile={profile} compact showActions={false} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Profile Completion Modal */}
