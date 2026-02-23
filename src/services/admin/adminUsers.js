@@ -214,7 +214,8 @@ export const updateProfileStatus = async (adminId, targetUserId, status, rejecti
       if (rejectionReason) updates.rejectionReason = rejectionReason
     }
     await updateDoc(ref, updates)
-    await logAdminAction(adminId, actionMap[status], targetUserId, { rejectionReason: status === 'rejected' ? rejectionReason : undefined })
+    const metadata = status === 'rejected' && rejectionReason ? { rejectionReason } : {}
+    await logAdminAction(adminId, actionMap[status], targetUserId, metadata)
     return { success: true }
   } catch (err) {
     console.error('[Admin] updateProfileStatus error:', err)

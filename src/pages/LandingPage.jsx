@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { motion } from 'framer-motion'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { FaCheck, FaShieldAlt, FaLock, FaQuoteLeft, FaStar } from 'react-icons/fa'
@@ -8,29 +8,36 @@ import Footer from '../components/layout/Footer'
 import WeddingGallery from '../components/WeddingGallery'
 import { useAuth } from '../context/AuthContext'
 import { useAllProfiles } from '../hooks/useAllProfiles'
+import { useOppositeGenderProfiles } from '../hooks/useOppositeGenderProfiles'
 import ProfileCard from '../components/profile/ProfileCard'
-import { heroBannerImages, galleryImages, secondBannerImage } from '../assets/wedding'
+import { heroBannerImages, galleryImages } from '../assets/wedding'
 
 const LandingPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { isAuthenticated } = useAuth()
-  const { profiles: allProfiles, loading: profilesLoading } = useAllProfiles({
+  const { isAuthenticated, currentUser, userProfile } = useAuth()
+
+  const { profiles: allProfiles, loading: allLoading } = useAllProfiles({
     limit: 16,
-    enabled: !isAuthenticated()  // Only fetch all users when logged out
+    enabled: !isAuthenticated()
   })
 
-  const bannerImages = heroBannerImages
+  const {
+    profiles: oppositeProfiles,
+    loading: oppositeLoading,
+    error: oppositeError
+  } = useOppositeGenderProfiles({
+    userId: currentUser?.uid,
+    userGender: userProfile?.personal?.gender,
+    limit: 16,
+    fetchFromFirestore: true,
+    enabled: isAuthenticated()
+  })
 
-  const [currentBanner, setCurrentBanner] = useState(0)
+  const displayedProfiles = isAuthenticated() ? oppositeProfiles : allProfiles
+  const profilesLoading = isAuthenticated() ? oppositeLoading : allLoading
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBanner((prev) => (prev + 1) % bannerImages.length)
-    }, 6000)
-
-    return () => clearInterval(interval)
-  }, [bannerImages.length])
+  const heroImage = heroBannerImages[0]
 
   const heroVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -49,22 +56,13 @@ const LandingPage = () => {
       
       {/* Hero Section with Carousel Banner */}
       <section className="relative overflow-hidden min-h-[70vh] sm:min-h-[80vh] lg:min-h-[90vh] flex items-center">
-        {/* Background Carousel */}
-        <div className="absolute inset-0 overflow-hidden">
-          {bannerImages.map((src, index) => (
-            <motion.div
-              key={`${src}-${index}`}
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${src})` }}
-              initial={{ opacity: index === currentBanner ? 1 : 0, scale: 1 }}
-              animate={{
-                opacity: index === currentBanner ? 1 : 0,
-                scale: index === currentBanner ? 1.02 : 1
-              }}
-              transition={{ duration: 1.2 }}
-            />
-          ))}
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        />
 
+        <div className="absolute inset-0 overflow-hidden">
           {/* Light Overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-r from-primary-maroon/30 via-primary-maroon/20 to-primary-maroon/30"></div>
           {/* Subtle gradient overlay */}
@@ -171,35 +169,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Second Banner - Celebrating Indian Traditions */}
-      <motion.section
-        className="relative overflow-hidden"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.7 }}
-      >
-        <div className="relative h-64 sm:h-80 md:h-[28rem] lg:h-[32rem] w-full">
-          <img
-            src={secondBannerImage}
-            alt="Angathi Rasam wedding ritual"
-            className="w-full h-full object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <motion.p
-              className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-white drop-shadow-lg text-center px-4"
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              Celebrating Indian Traditions
-            </motion.p>
-          </div>
-        </div>
-      </motion.section>
-      
       {/* Why Choose Us Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -302,15 +271,20 @@ const LandingPage = () => {
             </p>
           </motion.div>
 
-          {/* All users from database */}
+          {/* Logged in: opposite gender only. Logged out: all profiles */}
           {profilesLoading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-4">
               <div className="w-12 h-12 rounded-full border-4 border-primary-maroon/30 border-t-primary-gold animate-spin" />
               <p className="text-gray-600">Loading profiles...</p>
             </div>
-          ) : allProfiles.length > 0 ? (
+          ) : oppositeError && isAuthenticated() ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-4 rounded-xl border border-primary-gold/40 bg-primary-gold/5 px-6">
+              <p className="text-gray-700 text-center">{oppositeError}</p>
+              <Button onClick={() => navigate('/complete-profile')}>Complete Your Profile</Button>
+            </div>
+          ) : displayedProfiles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {allProfiles.map((profile, index) => (
+              {displayedProfiles.map((profile, index) => (
                 <motion.div
                   key={profile.id}
                   initial={{ opacity: 0, y: 30 }}

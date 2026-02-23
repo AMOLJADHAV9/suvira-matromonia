@@ -29,7 +29,7 @@ const DashboardPage = () => {
       if (currentUser && userProfile) {
         const completion = getProfileCompletion()
         // Show profile completion modal if completion is less than 50%
-        if (completion < 50 && !userProfile.profileUpdatedAt) {
+        if (completion < 50) {
           setShowProfileModal(true)
         }
         setLoading(false)

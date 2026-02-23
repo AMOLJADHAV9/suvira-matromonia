@@ -12,7 +12,7 @@ const RegisterPage = () => {
   }
 
   const handleRegistrationSuccess = () => {
-    // Close modal and redirect to email verification page
+    // Close modal and redirect to verify email page
     setRegisterModalOpen(false)
     navigate('/verify-email', { replace: true })
   }

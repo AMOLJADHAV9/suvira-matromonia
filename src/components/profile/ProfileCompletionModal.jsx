@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { FaInfoCircle } from 'react-icons/fa'
 import { useAuth } from '../../context/AuthContext'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
@@ -451,6 +452,17 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
       showCloseButton={!required}
     >
       <div className="space-y-6">
+        {required && (
+          <div className="rounded-xl border border-primary-gold/40 bg-primary-gold/10 px-5 py-4 flex gap-3">
+            <FaInfoCircle className="text-primary-gold text-xl flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-serif font-semibold text-primary-maroon mb-1">Next step: Complete your profile</h3>
+              <p className="text-gray-700 text-sm">
+                Without completing your profile, you will not be able to access the dashboard, find matches, or any other features.
+              </p>
+            </div>
+          </div>
+        )}
         <ProfileStepLayout currentStep={currentStep} totalSteps={totalSteps}>
           {/* Step 1: Basic Info & Community & Birth */}
           {currentStep === 1 && (

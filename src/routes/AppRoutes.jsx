@@ -24,7 +24,7 @@ import CompleteProfilePage from '../pages/CompleteProfilePage'
 const PROFILE_COMPLETION_THRESHOLD = 50
 
 // Protected Route Component (requires auth + email verified)
-const ProtectedRoute = ({ children, requiredRole = null, requireProfileComplete = false }) => {
+const ProtectedRoute = ({ children, requiredRole = null, requireProfileComplete = false, allowUnverified = false }) => {
   const { isAuthenticated, isRole, currentUser, loading, getProfileCompletion } = useAuth()
   
   if (loading) {
@@ -39,7 +39,7 @@ const ProtectedRoute = ({ children, requiredRole = null, requireProfileComplete 
     return <Navigate to="/login" replace />
   }
 
-  if (!currentUser.emailVerified) {
+  if (!allowUnverified && !currentUser.emailVerified) {
     return <Navigate to="/verify-email" replace />
   }
   
@@ -178,7 +178,7 @@ const AppRoutes = () => {
             <ProtectedRoute>
               <CompleteProfilePage />
             </ProtectedRoute>
-          } 
+          }
         />
         
         {/* Protected User Routes */}
@@ -193,7 +193,7 @@ const AppRoutes = () => {
         <Route 
           path="/search" 
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireProfileComplete>
               <SearchPage />
             </ProtectedRoute>
           } 
@@ -201,7 +201,7 @@ const AppRoutes = () => {
         <Route 
           path="/profile/:userId" 
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireProfileComplete>
               <ProfileViewPage />
             </ProtectedRoute>
           } 
@@ -209,7 +209,7 @@ const AppRoutes = () => {
         <Route 
           path="/interests" 
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireProfileComplete>
               <InterestPage />
             </ProtectedRoute>
           } 
@@ -233,7 +233,7 @@ const AppRoutes = () => {
         <Route 
           path="/subscription" 
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireProfileComplete>
               <SubscriptionPage />
             </ProtectedRoute>
           } 

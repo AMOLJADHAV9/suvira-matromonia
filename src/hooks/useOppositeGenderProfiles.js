@@ -3,8 +3,8 @@ import { getAllProfilesByOppositeGender, fetchUserGenderFromFirestore } from '..
 
 /**
  * Hook for gender-based profile fetching.
- * Fetches all opposite gender profiles (Male→Female, Female→Male) – approved, pending, etc.
- * Excludes suspended users. Used by Dashboard and Find Matches.
+ * Male user → female profiles only. Female user → male profiles only.
+ * Fetches opposite-gender profiles (approved + pending). Excludes suspended. Used by Dashboard and Find Matches.
  *
  * @param {object} options
  * @param {string} options.userId - Logged-in user's UID

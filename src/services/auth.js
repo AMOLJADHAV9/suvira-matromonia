@@ -237,25 +237,41 @@ export const updateUserProfile = async (userId, profileData) => {
   }
 }
 
+// Firestore rejects undefined; recursively replace with null
+const sanitizeForFirestore = (value) => {
+  if (value === undefined) return null
+  if (value === null) return null
+  if (Array.isArray(value)) return value.map(sanitizeForFirestore)
+  if (typeof value === 'object' && value.constructor === Object) {
+    const result = {}
+    for (const [k, v] of Object.entries(value)) {
+      result[k] = sanitizeForFirestore(v)
+    }
+    return result
+  }
+  return value
+}
+
 // Save profile step (step-specific storage under profile key)
 export const saveProfileStep = async (userId, stepKey, stepData, nextStep) => {
   try {
     const currentProfile = await getUserProfile(userId)
     const existingData = currentProfile.success ? currentProfile.data : {}
     const profile = existingData.profile || {}
+    const sanitizedStepData = sanitizeForFirestore(stepData)
 
     const updatedProfile = {
       ...profile,
-      [stepKey]: stepData,
+      [stepKey]: sanitizedStepData,
       lastUpdatedStep: nextStep,
       updatedAt: new Date()
     }
 
-    const updatedData = {
+    const updatedData = sanitizeForFirestore({
       ...existingData,
       profile: updatedProfile,
       profileUpdatedAt: new Date()
-    }
+    })
 
     // Sync religion/caste to personal so search and profile views stay in sync
     if (stepKey === 'communityBirthDetails' && (stepData.religion || stepData.caste)) {
