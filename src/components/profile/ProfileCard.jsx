@@ -14,14 +14,25 @@ const ProfileCard = ({ profile, compact = false, showActions = true }) => {
   const verified = isProfileVerified(profile)
 
   const imageSection = (
-    <div className="relative w-full h-64 bg-gradient-to-br from-primary-maroon to-primary-gold flex items-center justify-center overflow-hidden rounded-t-2xl">
+    <div
+      className={`relative w-full overflow-hidden rounded-t-2xl bg-gray-100 ${
+        compact ? 'h-72' : 'aspect-[4/5]'
+      }`}
+    >
       {photoUrl ? (
-        <img src={photoUrl} alt="" className="w-full h-full object-cover" />
+        <img
+          src={photoUrl}
+          alt={profile.personal?.name || 'Profile photo'}
+          className="w-full h-full object-cover object-top"
+        />
       ) : (
-        <span className="text-white text-6xl font-serif">
-          {profile.personal?.name?.charAt(0) || '?'}
-        </span>
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-maroon to-primary-gold">
+          <span className="text-white text-6xl font-serif">
+            {profile.personal?.name?.charAt(0) || '?'}
+          </span>
+        </div>
       )}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent" />
       {verified && (
         <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm text-primary-maroon px-2.5 py-1 rounded-full text-xs font-semibold shadow-soft flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
@@ -32,36 +43,41 @@ const ProfileCard = ({ profile, compact = false, showActions = true }) => {
   )
 
   const infoSection = (
-    <div className={compact ? 'p-3' : 'p-4'}>
-      <h3 className="text-lg font-semibold text-primary-maroon">
+    <div
+      className={`profile-content flex-1 flex flex-col ${
+        compact ? 'px-4 py-3' : 'p-4 md:p-5'
+      }`}
+    >
+      <h3
+        className={`profile-name font-semibold text-primary-maroon ${
+          compact ? 'text-base' : 'text-lg'
+        }`}
+      >
         {profile.personal?.name || 'Profile'}
       </h3>
-      <p className="text-gray-600 text-sm mt-1">
-        {profile.personal?.age && `${profile.personal.age} yrs`}
-        {profile.personal?.location && ` • ${profile.personal.location}`}
+      <p
+        className={`profile-meta text-gray-600 mt-1 ${
+          compact ? 'text-[13px]' : 'text-sm'
+        }`}
+      >
+        {profile.personal?.age ? `${profile.personal.age} yrs` : 'N/A'}
+        {' • '}
+        {profile.personal?.location || 'N/A'}
       </p>
       {!compact && (
         <div className="space-y-1 mt-3 text-sm text-gray-600">
-          {profile.personal?.religion && (
-            <div>Religion: <span className="font-medium">{profile.personal.religion}</span></div>
-          )}
-          {profile.personal?.caste && (
-            <div>Caste: <span className="font-medium">{profile.personal.caste}</span></div>
-          )}
-          {getProfileEducation(profile) && (
-            <div>Education: <span className="font-medium">{getProfileEducation(profile)}</span></div>
-          )}
-          {getProfileOccupation(profile) && (
-            <div>Occupation: <span className="font-medium">{getProfileOccupation(profile)}</span></div>
-          )}
+          <div>Religion: <span className="font-medium">{profile.personal?.religion || 'N/A'}</span></div>
+          <div>Caste: <span className="font-medium">{profile.personal?.caste || 'N/A'}</span></div>
+          <div>Education: <span className="font-medium">{getProfileEducation(profile) || 'N/A'}</span></div>
+          <div>Occupation: <span className="font-medium">{getProfileOccupation(profile) || 'N/A'}</span></div>
         </div>
       )}
       {showActions && (
-        <div className="flex gap-2 mt-4">
+        <div className="profile-actions flex gap-2 mt-4">
           <Button
             variant="outline"
             size="sm"
-            className="flex-1"
+            className={`flex-1 ${compact ? 'py-2 px-3 text-[13px]' : ''}`}
             onClick={(e) => { e.stopPropagation(); navigate(`/profile/${profile.id}`) }}
             icon={<FaEye />}
           >
@@ -70,7 +86,7 @@ const ProfileCard = ({ profile, compact = false, showActions = true }) => {
           <Button
             variant="primary"
             size="sm"
-            className="flex-1"
+            className={`flex-1 ${compact ? 'py-2 px-3 text-[13px]' : ''}`}
             onClick={(e) => { e.stopPropagation(); navigate(`/profile/${profile.id}`) }}
             icon={<FaHeart />}
           >
@@ -84,11 +100,13 @@ const ProfileCard = ({ profile, compact = false, showActions = true }) => {
   return (
     <GlassCard
       padding="p-0"
-      className={`overflow-hidden ${showActions ? '' : 'cursor-pointer'}`}
+      className={`overflow-hidden group h-full ${showActions ? '' : 'cursor-pointer'}`}
       onClick={!showActions ? () => navigate(`/profile/${profile.id}`) : undefined}
     >
-      {imageSection}
-      {infoSection}
+      <div className="flex flex-col h-full bg-white">
+        {imageSection}
+        {infoSection}
+      </div>
     </GlassCard>
   )
 }

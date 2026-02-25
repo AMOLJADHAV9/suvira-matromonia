@@ -3,25 +3,23 @@ import { motion } from 'framer-motion'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Button from '../ui/Button'
+import SubscriptionExpiredBanner from '../premium/SubscriptionExpiredBanner'
 import { FaCrown, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa'
 import { cornerFlowerImage } from '../../assets/wedding'
 
 const Header = () => {
-  const { isAuthenticated, isAdmin, isPremiumUser, userProfile } = useAuth()
+  const { isAuthenticated, isAdmin, canAccessPremium, isSubscriptionExpired, userProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'About', path: '/about' },
-    { name: 'Contact', path: '/contact' },
-    { name: 'FAQ', path: '/faq' },
     ...(isAuthenticated() && !isAdmin() ? [
       { name: 'Dashboard', path: '/dashboard' },
       { name: 'Find Matches', path: '/search' },
       { name: 'Interests', path: '/interests' },
-      ...(isPremiumUser() ? [{ name: 'Chat', path: '/chat' }] : [])
+      ...(canAccessPremium() ? [{ name: 'Chat', path: '/chat' }] : [])
     ] : [])
   ]
 
@@ -36,8 +34,12 @@ const Header = () => {
     }
   }
 
+  const showExpiredBanner = isAuthenticated() && !isAdmin() && isSubscriptionExpired()
+
   return (
-    <header className="bg-white shadow-lg sticky top-0 z-40 relative overflow-hidden">
+    <>
+      {showExpiredBanner && <SubscriptionExpiredBanner />}
+      <header className="bg-white shadow-lg sticky top-0 z-40 relative overflow-hidden">
       {/* Corner flowers - top left & top right */}
       <img
         src={cornerFlowerImage}
@@ -62,7 +64,7 @@ const Header = () => {
               <img
                 src="/suviralogo-removebg-preview.png"
                 alt="Suvira Matrimony"
-                className="h-12 w-auto object-contain"
+                className="h-14 w-auto object-contain"
               />
               <div>
                 <h1 className="text-2xl font-serif font-bold text-primary-maroon">
@@ -99,7 +101,7 @@ const Header = () => {
                     <span className="font-medium">
                       {userProfile?.personal?.name || 'User'}
                     </span>
-                    {isPremiumUser() && (
+                    {canAccessPremium() && (
                       <FaCrown className="text-primary-gold" />
                     )}
                   </button>
@@ -171,7 +173,7 @@ const Header = () => {
                     <span className="font-medium">
                       {userProfile?.personal?.name || 'User'}
                     </span>
-                    {isPremiumUser() && (
+                    {canAccessPremium() && (
                       <FaCrown className="text-primary-gold" />
                     )}
                   </div>
@@ -218,6 +220,7 @@ const Header = () => {
         </motion.div>
       </div>
     </header>
+    </>
   )
 }
 

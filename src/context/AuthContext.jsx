@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { onAuthStateChange, getUserProfile } from '../services/auth'
+import { getPackageById } from '../utils/premiumPackages'
 
 const AuthContext = createContext()
 
@@ -78,12 +79,37 @@ export const AuthProvider = ({ children }) => {
     return userProfile?.profileStatus === 'rejected'
   }
 
-  // Check subscription status
+  // Check subscription status (not expired, has valid expiry)
   const hasActiveSubscription = () => {
     if (!userProfile?.subscription) return false
-    
-    const { expiryDate } = userProfile.subscription
-    return expiryDate && new Date(expiryDate) > new Date()
+    const { isActive, expiryDate } = userProfile.subscription
+    if (isActive === false) return false
+    const exp = expiryDate?.toDate?.() || expiryDate
+    return exp && new Date(exp) > new Date()
+  }
+
+  // Check if user has an active premium package (required for contact actions)
+  const hasActivePackage = () => {
+    if (isAdmin()) return true
+    return hasActiveSubscription()
+  }
+
+  // Subscription has expired - had subscription but now past expiry
+  const isSubscriptionExpired = () => {
+    if (!userProfile?.subscription?.expiryDate) return false
+    const exp = userProfile.subscription.expiryDate?.toDate?.() || userProfile.subscription.expiryDate
+    return new Date(exp) <= new Date()
+  }
+
+  // Get active package config (for limits display)
+  const getActivePackage = () => {
+    const packageId = userProfile?.subscription?.packageId || userProfile?.subscription?.planType
+    return packageId ? getPackageById(packageId) : null
+  }
+
+  // Can perform contact actions: view profile, send interest, view mobile
+  const canPerformContactAction = () => {
+    return hasActivePackage()
   }
 
   // Get subscription expiry date
@@ -91,9 +117,9 @@ export const AuthProvider = ({ children }) => {
     return userProfile?.subscription?.expiryDate || null
   }
 
-  // Check if user can access premium features
+  // Check if user can access premium features (chat, etc.) - requires active subscription
   const canAccessPremium = () => {
-    return isPremiumUser() || hasActiveSubscription()
+    return isAdmin() || hasActiveSubscription()
   }
 
   // Calculate profile completion
@@ -143,6 +169,10 @@ export const AuthProvider = ({ children }) => {
     isProfilePending,
     isProfileRejected,
     hasActiveSubscription,
+    hasActivePackage,
+    isSubscriptionExpired,
+    getActivePackage,
+    canPerformContactAction,
     getSubscriptionExpiry,
     canAccessPremium,
     getProfileCompletion,

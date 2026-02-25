@@ -37,6 +37,7 @@ import {
   AGE_OPTIONS
 } from '../../utils/profileConstants'
 import { INDIAN_STATES } from '../../utils/constants'
+import { VALIDATION_RULES, VALIDATION_MESSAGES } from '../../utils/validation'
 
 const SelectField = ({ label, required, value, onChange, error, options, placeholder = 'Select...' }) => {
   const opts = Array.isArray(options) ? options.map(o => (typeof o === 'string' ? { value: o, label: o } : o)) : []
@@ -116,6 +117,7 @@ const getInitialFormData = (userProfile) => {
       const matched = MAHARASHTRA_CITIES.find(c => c.toLowerCase() === loc.toLowerCase())
       return matched ? '' : loc
     })(),
+    mobile: personal.mobile || personal.phone || '',
     // Step 1 - Community & Birth
     religion: profile.communityBirthDetails?.religion || personal.religion || '',
     caste: profile.communityBirthDetails?.caste || personal.caste || '',
@@ -265,6 +267,9 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
       if (!formData.religion) e.religion = 'Religion is required'
       if (formData.religion && formData.religion !== 'Other' && !formData.caste) {
         e.caste = 'Caste is required'
+      }
+      if (formData.mobile?.trim() && !VALIDATION_RULES.phone(formData.mobile.trim())) {
+        e.mobile = VALIDATION_MESSAGES.phone
       }
     }
 
@@ -421,11 +426,12 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
             name: formData.name?.trim(),
             age: Number(formData.age),
             gender: formData.gender,
-            location: locationValue
+            location: locationValue,
+            mobile: formData.mobile?.trim() || null
           }
         })
         if (personalRes.success) {
-          updateProfile({ personal: personalRes.data?.personal || { name: formData.name, age: formData.age, gender: formData.gender, location: formData.location } })
+          updateProfile({ personal: personalRes.data?.personal || { name: formData.name, age: formData.age, gender: formData.gender, location: locationValue, mobile: formData.mobile?.trim() || null } })
         }
       }
       updateProfile({ profile: { ...profile, [key]: payload } })
@@ -473,6 +479,7 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
                 <Input label="Age" required type="number" value={formData.age} onChange={(e) => setField('age', e.target.value)} error={errors.age} placeholder="18" min={18} max={70} />
                 <SelectField label="Gender" required value={formData.gender} onChange={(e) => setField('gender', e.target.value)} error={errors.gender} options={GENDER_OPTIONS} />
                 <SelectField label="Location" required value={formData.location} onChange={(e) => { setField('location', e.target.value); if (e.target.value !== 'Other') setField('locationCustom', '') }} error={errors.location} options={locationOptions} placeholder="Select city" />
+                <Input label="Mobile Number" type="tel" value={formData.mobile} onChange={(e) => setField('mobile', e.target.value)} error={errors.mobile} placeholder="10-digit Indian mobile number" />
                 {formData.location === 'Other' && (
                   <Input label="Location (Custom)" required value={formData.locationCustom} onChange={(e) => setField('locationCustom', e.target.value)} error={errors.locationCustom} placeholder="City, State" className="sm:col-span-2" />
                 )}

@@ -11,6 +11,12 @@ import { useAllProfiles } from '../hooks/useAllProfiles'
 import { useOppositeGenderProfiles } from '../hooks/useOppositeGenderProfiles'
 import ProfileCard from '../components/profile/ProfileCard'
 import { heroBannerImages, galleryImages } from '../assets/wedding'
+import couple1 from '../assets/real-matech-story/9da33655fe580abfc72c0b483b715a30.jpg'
+import couple2 from '../assets/real-matech-story/b2f4bc0bbba5e4bfb172aecb168cfc56.jpg'
+import couple3 from '../assets/real-matech-story/b797f6384f89b1ade60e0a1f57b0c352.jpg'
+import couple4 from '../assets/real-matech-story/f2b3666b5c0db1dc5d9def42435b5dbb.jpg'
+import couple5 from '../assets/real-matech-story/images (2).jpg'
+import couple6 from '../assets/real-matech-story/stylish-indian-hindu-couple-posed-street_627829-12969.avif'
 
 const LandingPage = () => {
   const navigate = useNavigate()
@@ -340,7 +346,7 @@ const LandingPage = () => {
               {
                 name: 'Aarav & Ananya',
                 location: 'Mumbai, Maharashtra',
-                image: 'https://images.unsplash.com/photo-1529634702774-0a227cc14afc?auto=format&fit=crop&w=1200&q=80',
+                image: couple1,
                 quote: 'Our families connected through Suvira and within a few months, everything fell into place. The verified profiles made the process smooth and trustworthy.',
                 marriedDate: 'Married in 2023',
                 rating: 5
@@ -348,7 +354,7 @@ const LandingPage = () => {
               {
                 name: 'Rohan & Priya',
                 location: 'Delhi, NCR',
-                image: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1200&q=80',
+                image: couple2,
                 quote: 'We were in different cities, but Suvira brought our families together. The recommendations felt accurate and saved us so much time.',
                 marriedDate: 'Married in 2024',
                 rating: 5
@@ -356,7 +362,7 @@ const LandingPage = () => {
               {
                 name: 'Vikram & Kavya',
                 location: 'Bangalore, Karnataka',
-                image: 'https://images.unsplash.com/photo-1520256862855-398228c41684?auto=format&fit=crop&w=1200&q=80',
+                image: couple3,
                 quote: 'We loved the focus on family values and culture. It was comfortable for both families to connect, talk, and move forward confidently.',
                 marriedDate: 'Married in 2022',
                 rating: 5
@@ -364,7 +370,7 @@ const LandingPage = () => {
               {
                 name: 'Arjun & Meera',
                 location: 'Hyderabad, Telangana',
-                image: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80',
+                image: couple4,
                 quote: 'The profile details and verification gave our parents confidence. We found a genuine connection and everything progressed naturally.',
                 marriedDate: 'Married in 2023',
                 rating: 5
@@ -372,7 +378,7 @@ const LandingPage = () => {
               {
                 name: 'Aditya & Sneha',
                 location: 'Chennai, Tamil Nadu',
-                image: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
+                image: couple5,
                 quote: 'From first conversation to meeting families, the journey felt secure and well-guided. We are grateful for the platform.',
                 marriedDate: 'Married in 2024',
                 rating: 5
@@ -380,7 +386,7 @@ const LandingPage = () => {
               {
                 name: 'Karan & Aisha',
                 location: 'Pune, Maharashtra',
-                image: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=1200&q=80',
+                image: couple6,
                 quote: 'We appreciated the privacy features and verified profiles. Suvira helped us find the right match with respect and comfort.',
                 marriedDate: 'Married in 2022',
                 rating: 5

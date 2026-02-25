@@ -29,8 +29,11 @@ import {
   FaSearch,
   FaCheckCircle,
   FaImage,
+  FaPhone,
 } from 'react-icons/fa'
 import ReportButton from '../components/profile/ReportButton'
+import UpgradePrompt from '../components/premium/UpgradePrompt'
+import { checkCanContact, recordContact } from '../services/contactUsage'
 
 /** Premium white content card with soft glow border */
 const SectionCard = ({ icon: Icon, title, children, className = '' }) => (
@@ -99,7 +102,7 @@ const itemVariants = {
 const ProfileViewPage = () => {
   const { userId } = useParams()
   const navigate = useNavigate()
-  const { currentUser, userProfile, isPremiumUser, isAdmin } = useAuth()
+  const { currentUser, userProfile, canPerformContactAction, canAccessPremium, isAdmin, refreshUserProfile } = useAuth()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -108,6 +111,8 @@ const ProfileViewPage = () => {
   const [interest, setInterest] = useState(null)
   const [interestLoading, setInterestLoading] = useState(false)
   const [interestError, setInterestError] = useState(null)
+  const [showMobile, setShowMobile] = useState(false)
+  const [contactRecorded, setContactRecorded] = useState(false)
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -137,6 +142,24 @@ const ProfileViewPage = () => {
     }
     fetchProfile()
   }, [userId, currentUser?.uid, userProfile?.personal?.gender, isAdmin])
+
+  useEffect(() => {
+    const doRecordContact = async () => {
+      if (!profile?.id || !currentUser?.uid || isAdmin() || !canPerformContactAction() || contactRecorded) return
+      const check = await checkCanContact(currentUser.uid, profile.id)
+      if (!check.allowed) return
+      if (check.alreadyContacted) {
+        setContactRecorded(true)
+        return
+      }
+      const res = await recordContact(currentUser.uid, profile.id)
+      if (res.success) {
+        setContactRecorded(true)
+        refreshUserProfile?.()
+      }
+    }
+    doRecordContact()
+  }, [profile?.id, currentUser?.uid, isAdmin, canPerformContactAction, contactRecorded])
 
   useEffect(() => {
     const fetchInterest = async () => {
@@ -203,6 +226,57 @@ const ProfileViewPage = () => {
               Go Back
             </Button>
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAdmin() && !canPerformContactAction()) {
+    return (
+      <div className="min-h-screen bg-primary-cream/50">
+        <Header />
+        <div className="pt-24 pb-12 bg-gradient-to-b from-primary-maroon/95 via-primary-maroon/90 to-primary-maroon/80" />
+        <div className="max-w-2xl mx-auto px-4 -mt-16">
+          <div className="mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(-1)}
+              icon={<FaArrowLeft />}
+              className="text-white hover:bg-white/10"
+            >
+              Back
+            </Button>
+          </div>
+          <UpgradePrompt
+            variant="expired"
+            title="Package Required"
+            message="Purchase a premium package to view profiles, send interest, and see contact details."
+          />
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAdmin() && !canPerformContactAction()) {
+    return (
+      <div className="min-h-screen bg-primary-cream/50">
+        <Header />
+        <div className="pt-32 pb-16 bg-gradient-to-b from-primary-maroon/95 via-primary-maroon/90 to-primary-maroon/80" />
+        <div className="max-w-2xl mx-auto px-4 -mt-24 flex flex-col items-center justify-center min-h-[40vh]">
+          <UpgradePrompt
+            variant="default"
+            title="Purchase a Package to View Profiles"
+            message="View full profiles, send interest, and see contact details. Choose a plan that fits you."
+          />
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+            className="mt-6"
+            icon={<FaArrowLeft />}
+          >
+            Go Back
+          </Button>
         </div>
       </div>
     )
@@ -367,7 +441,7 @@ const ProfileViewPage = () => {
                         Declined
                       </span>
                     )}
-                    {!isAdmin() && interest?.direction === 'sent' && interest?.status === 'accepted' && isPremiumUser() && (
+                    {!isAdmin() && interest?.direction === 'sent' && interest?.status === 'accepted' && canAccessPremium() && (
                       <Button
                         variant="primary"
                         size="lg"
@@ -378,7 +452,7 @@ const ProfileViewPage = () => {
                         Message
                       </Button>
                     )}
-                    {!isAdmin() && interest?.direction === 'sent' && interest?.status === 'accepted' && !isPremiumUser() && (
+                    {!isAdmin() && interest?.direction === 'sent' && interest?.status === 'accepted' && !canAccessPremium() && (
                       <Button
                         variant="outline"
                         size="lg"
@@ -410,6 +484,36 @@ const ProfileViewPage = () => {
             <motion.div variants={itemVariants}>
               <SectionCard icon={FaUser} title="About Me">
                 <InfoRow label="Age" value={personal.age ? `${personal.age} years` : null} />
+                {(() => {
+                  const mobile = personal.mobile || personal.phone
+                  if (!mobile) return null
+                  if (showMobile) return <InfoRow label="Mobile" value={mobile} />
+                  return (
+                    <div className="flex flex-wrap items-center gap-2 py-2 border-b border-gray-100">
+                      <span className="text-gray-500 font-medium min-w-[120px] text-sm">Mobile</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        icon={<FaPhone />}
+                        onClick={async () => {
+                          const check = await checkCanContact(currentUser.uid, profile.id)
+                          if (!check.allowed) {
+                            setInterestError(check.reason)
+                            return
+                          }
+                          if (!check.alreadyContacted) {
+                            await recordContact(currentUser.uid, profile.id)
+                            refreshUserProfile?.()
+                          }
+                          setShowMobile(true)
+                        }}
+                        className="text-sm"
+                      >
+                        Show Mobile
+                      </Button>
+                    </div>
+                  )
+                })()}
                 <InfoRow label="Religion" value={personal.religion || community.religion} />
                 <InfoRow label="Caste" value={personal.caste || community.caste} />
                 <InfoRow label="Sub-caste" value={community.subCaste} />

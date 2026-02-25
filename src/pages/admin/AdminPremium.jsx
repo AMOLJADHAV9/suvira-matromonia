@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { fetchPremiumUsers, activatePremium, extendPremium, cancelPremium } from '../../services/admin'
+import { fetchUsers, activatePremium, extendPremium, cancelPremium, expireSubscription } from '../../services/admin'
+import { seedPackages } from '../../services/packages'
+import { PREMIUM_PACKAGES } from '../../utils/premiumPackages'
 
 const AdminPremium = () => {
   const { currentUser } = useAuth()
@@ -10,6 +12,9 @@ const AdminPremium = () => {
   const [actionLoading, setActionLoading] = useState(null)
   const [extendMonths, setExtendMonths] = useState(1)
   const [activateUserId, setActivateUserId] = useState('')
+  const [selectedPackage, setSelectedPackage] = useState('platinum')
+  const [seedLoading, setSeedLoading] = useState(false)
+  const [seedResult, setSeedResult] = useState(null)
 
   const load = async () => {
     if (!currentUser?.uid) return
@@ -29,7 +34,7 @@ const AdminPremium = () => {
 
   const handleActivate = async (userId) => {
     setActionLoading(userId)
-    const res = await activatePremium(currentUser.uid, userId, 'manual', 1)
+    const res = await activatePremium(currentUser.uid, userId, selectedPackage)
     if (res.success) load()
     else setError(res.error)
     setActionLoading(null)
@@ -46,11 +51,20 @@ const AdminPremium = () => {
   const handleActivateById = async () => {
     if (!activateUserId.trim()) return
     setActionLoading('activate')
-    const res = await activatePremium(currentUser.uid, activateUserId.trim(), 'manual', 1)
+    const res = await activatePremium(currentUser.uid, activateUserId.trim(), selectedPackage)
     if (res.success) {
       setActivateUserId('')
       load()
     } else setError(res.error)
+    setActionLoading(null)
+  }
+
+  const handleExpire = async (userId) => {
+    if (!window.confirm('Mark subscription as expired for this user?')) return
+    setActionLoading(userId)
+    const res = await expireSubscription(currentUser.uid, userId)
+    if (res.success) load()
+    else setError(res.error)
     setActionLoading(null)
   }
 
@@ -63,6 +77,14 @@ const AdminPremium = () => {
     setActionLoading(null)
   }
 
+  const handleSeedPackages = async () => {
+    setSeedLoading(true)
+    setSeedResult(null)
+    const res = await seedPackages()
+    setSeedResult(res)
+    setSeedLoading(false)
+  }
+
   return (
     <div>
       <h2 className="text-2xl font-serif font-bold text-primary-maroon mb-6">Premium Management</h2>
@@ -70,8 +92,37 @@ const AdminPremium = () => {
       {error && <div className="mb-4 p-4 rounded-xl bg-red-50 text-red-700">{error}</div>}
 
       <div className="mb-6 p-4 bg-white rounded-xl border border-primary-gold/20">
+        <p className="text-sm font-medium text-gray-700 mb-2">Seed packages to Firestore</p>
+        <p className="text-xs text-gray-500 mb-2">Sync package definitions from code to the packages collection. Run when you change premium packages.</p>
+        <button
+          type="button"
+          onClick={handleSeedPackages}
+          disabled={seedLoading}
+          className="px-4 py-2 bg-primary-maroon/90 text-white rounded-xl font-medium disabled:opacity-50"
+        >
+          {seedLoading ? 'Seeding...' : 'Seed packages'}
+        </button>
+        {seedResult && (
+          <p className={`mt-2 text-sm ${seedResult.success ? 'text-green-600' : 'text-red-600'}`}>
+            {seedResult.success ? `Seeded ${seedResult.count} packages.` : seedResult.error || 'Seed failed.'}
+          </p>
+        )}
+      </div>
+
+      <div className="mb-6 p-4 bg-white rounded-xl border border-primary-gold/20">
         <p className="text-sm font-medium text-gray-700 mb-2">Activate Premium (manual)</p>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          <select
+            value={selectedPackage}
+            onChange={(e) => setSelectedPackage(e.target.value)}
+            className="px-4 py-2 border rounded-xl"
+          >
+            {Object.entries(PREMIUM_PACKAGES).map(([id, pkg]) => (
+              <option key={id} value={id}>
+                {pkg.name} ({pkg.validityMonths}m, ₹{pkg.price})
+              </option>
+            ))}
+          </select>
           <input
             type="text"
             placeholder="User ID"
@@ -85,7 +136,7 @@ const AdminPremium = () => {
             disabled={actionLoading === 'activate' || !activateUserId.trim()}
             className="px-4 py-2 bg-primary-gold text-white rounded-xl font-medium"
           >
-            Activate 1 Month
+            Activate Package
           </button>
         </div>
       </div>
@@ -124,6 +175,14 @@ const AdminPremium = () => {
                 className="px-3 py-1 bg-primary-gold/20 rounded text-sm"
               >
                 Extend
+              </button>
+              <button
+                type="button"
+                onClick={() => handleExpire(u.id)}
+                disabled={actionLoading === u.id}
+                className="px-3 py-1 bg-amber-100 rounded text-sm"
+              >
+                Expire
               </button>
               <button
                 type="button"

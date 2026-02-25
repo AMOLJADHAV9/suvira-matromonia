@@ -23,6 +23,21 @@ import CompleteProfilePage from '../pages/CompleteProfilePage'
 
 const PROFILE_COMPLETION_THRESHOLD = 50
 
+// Premium Route (requires active subscription or admin - for Chat)
+const PremiumRoute = ({ children }) => {
+  const { canAccessPremium, currentUser, loading } = useAuth()
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-gold"></div>
+      </div>
+    )
+  }
+  if (!currentUser) return <Navigate to="/login" replace />
+  if (!canAccessPremium()) return <Navigate to="/subscription" replace state={{ message: 'Active subscription required' }} />
+  return children
+}
+
 // Protected Route Component (requires auth + email verified)
 const ProtectedRoute = ({ children, requiredRole = null, requireProfileComplete = false, allowUnverified = false }) => {
   const { isAuthenticated, isRole, currentUser, loading, getProfileCompletion } = useAuth()
@@ -217,16 +232,20 @@ const AppRoutes = () => {
         <Route 
           path="/chat" 
           element={
-            <ProtectedRoute requiredRole="premium_user">
-              <ChatPage />
+            <ProtectedRoute requireProfileComplete>
+              <PremiumRoute>
+                <ChatPage />
+              </PremiumRoute>
             </ProtectedRoute>
           } 
         />
         <Route 
           path="/chat/:partnerId" 
           element={
-            <ProtectedRoute requiredRole="premium_user">
-              <ChatPage />
+            <ProtectedRoute requireProfileComplete>
+              <PremiumRoute>
+                <ChatPage />
+              </PremiumRoute>
             </ProtectedRoute>
           } 
         />

@@ -32,7 +32,7 @@ const validateOppositeGender = (senderGender, receiverGender) => {
 }
 
 /**
- * Send interest. Enforces gender restriction and prevents duplicates.
+ * Send interest. Enforces gender restriction, package/contact limits, and prevents duplicates.
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
 export const sendInterest = async (senderId, receiverId, senderGender, receiverGender) => {
@@ -44,6 +44,12 @@ export const sendInterest = async (senderId, receiverId, senderGender, receiverG
   }
   if (!validateOppositeGender(senderGender, receiverGender)) {
     return { success: false, error: 'Interest can only be sent to opposite gender profiles' }
+  }
+
+  const { checkCanContact, recordContact } = await import('./contactUsage')
+  const canContact = await checkCanContact(senderId, receiverId)
+  if (!canContact.allowed) {
+    return { success: false, error: canContact.reason || 'Cannot send interest. Purchase a package to continue.' }
   }
 
   try {
@@ -69,6 +75,11 @@ export const sendInterest = async (senderId, receiverId, senderGender, receiverG
       createdAt: serverTimestamp(),
     }
     const ref = await addDoc(collection(db, COLLECTION), interestData)
+
+    const recordResult = await recordContact(senderId, receiverId)
+    if (!recordResult.success && !recordResult.alreadyContacted) {
+      console.warn('[Interests] recordContact failed after send:', recordResult.error)
+    }
 
     const { checkSpamAndFlag } = await import('./admin/adminInterests')
     const spam = await checkSpamAndFlag(senderId)
