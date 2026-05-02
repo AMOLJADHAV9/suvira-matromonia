@@ -102,6 +102,41 @@ const GENDER_OPTIONS = [
 const getInitialFormData = (userProfile) => {
   const profile = userProfile?.profile || {}
   const personal = userProfile?.personal || {}
+
+  // Resolve community/birth values against option lists, falling back to "Other" + custom text
+  const rawReligion = profile.communityBirthDetails?.religion || personal.religion || ''
+  const matchedReligion = RELIGIONS.find(r => r.toLowerCase() === rawReligion.toLowerCase())
+  const religion = matchedReligion || (rawReligion ? 'Other' : '')
+  const religionCustom = matchedReligion ? '' : rawReligion
+
+  const rawCaste = profile.communityBirthDetails?.caste || personal.caste || ''
+  const matchedCaste = CASTES.find(c => c.toLowerCase() === rawCaste.toLowerCase())
+  const caste = matchedCaste || (rawCaste ? 'Other' : '')
+  const casteCustom = matchedCaste ? '' : rawCaste
+
+  const rawSubCaste = profile.communityBirthDetails?.subCaste || ''
+  const subOptionsForInit = caste && caste !== 'Other'
+    ? (SUBCASTE_BY_CASTE[caste] || [])
+    : []
+  const matchedSubCaste = subOptionsForInit.find(s => s.toLowerCase() === rawSubCaste.toLowerCase())
+  const subCaste = matchedSubCaste || (rawSubCaste ? 'Other' : '')
+  const subCasteCustom = matchedSubCaste ? '' : rawSubCaste
+
+  const rawGotra = profile.communityBirthDetails?.gotra || ''
+  const matchedGotra = GOTRAS.find(g => g.toLowerCase() === rawGotra.toLowerCase())
+  const gotra = matchedGotra || (rawGotra ? 'Other' : '')
+  const gotraCustom = matchedGotra ? '' : rawGotra
+
+  const rawRashi = profile.communityBirthDetails?.rashi || ''
+  const matchedRashi = RASHIS.find(r => r.toLowerCase() === rawRashi.toLowerCase())
+  const rashi = matchedRashi || (rawRashi ? 'Other' : '')
+  const rashiCustom = matchedRashi ? '' : rawRashi
+
+  const rawNakshatra = profile.communityBirthDetails?.nakshatra || ''
+  const matchedNakshatra = NAKSHATRAS.find(n => n.toLowerCase() === rawNakshatra.toLowerCase())
+  const nakshatra = matchedNakshatra || (rawNakshatra ? 'Other' : '')
+  const nakshatraCustom = matchedNakshatra ? '' : rawNakshatra
+
   return {
     // Personal (Basic Info)
     name: personal.name || '',
@@ -119,12 +154,18 @@ const getInitialFormData = (userProfile) => {
     })(),
     mobile: personal.mobile || personal.phone || '',
     // Step 1 - Community & Birth
-    religion: profile.communityBirthDetails?.religion || personal.religion || '',
-    caste: profile.communityBirthDetails?.caste || personal.caste || '',
-    subCaste: profile.communityBirthDetails?.subCaste || '',
-    gotra: profile.communityBirthDetails?.gotra || '',
-    rashi: profile.communityBirthDetails?.rashi || '',
-    nakshatra: profile.communityBirthDetails?.nakshatra || '',
+    religion,
+    religionCustom,
+    caste,
+    casteCustom,
+    subCaste,
+    subCasteCustom,
+    gotra,
+    gotraCustom,
+    rashi,
+    rashiCustom,
+    nakshatra,
+    nakshatraCustom,
     manglik: profile.communityBirthDetails?.manglik || '',
     timeOfBirth: profile.communityBirthDetails?.timeOfBirth || '',
     placeOfBirth: profile.communityBirthDetails?.placeOfBirth || '',
@@ -216,6 +257,8 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
   const casteOptions = CASTES
   const subCasteOptions = formData.caste ? (SUBCASTE_BY_CASTE[formData.caste] || ['Other']) : []
   const locationOptions = [...MAHARASHTRA_CITIES, 'Other']
+  const rashiOptions = [...RASHIS, 'Other']
+  const nakshatraOptions = [...NAKSHATRAS, 'Other']
   const preferredCityOptions = formData.preferredState === 'Maharashtra' ? MAHARASHTRA_CITIES : null
 
   const handleComplete = async () => {
@@ -267,6 +310,24 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
       if (!formData.religion) e.religion = 'Religion is required'
       if (formData.religion && formData.religion !== 'Other' && !formData.caste) {
         e.caste = 'Caste is required'
+      }
+      if (formData.religion === 'Other' && !formData.religionCustom?.trim()) {
+        e.religionCustom = 'Please enter your religion'
+      }
+      if (formData.caste === 'Other' && !formData.casteCustom?.trim()) {
+        e.casteCustom = 'Please enter your caste'
+      }
+      if (formData.subCaste === 'Other' && !formData.subCasteCustom?.trim()) {
+        e.subCasteCustom = 'Please enter your sub-caste'
+      }
+      if (formData.gotra === 'Other' && !formData.gotraCustom?.trim()) {
+        e.gotraCustom = 'Please enter your gotra'
+      }
+      if (formData.rashi === 'Other' && !formData.rashiCustom?.trim()) {
+        e.rashiCustom = 'Please enter your rashi'
+      }
+      if (formData.nakshatra === 'Other' && !formData.nakshatraCustom?.trim()) {
+        e.nakshatraCustom = 'Please enter your nakshatra'
       }
       if (formData.mobile?.trim() && !VALIDATION_RULES.phone(formData.mobile.trim())) {
         e.mobile = VALIDATION_MESSAGES.phone
@@ -345,14 +406,21 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
         'partnerPreferences',
         'finalLifestyle'
       ]
+      const resolvedReligion = formData.religion === 'Other' ? (formData.religionCustom?.trim() || '') : formData.religion
+      const resolvedCaste = formData.caste === 'Other' ? (formData.casteCustom?.trim() || '') : formData.caste
+      const resolvedSubCaste = formData.subCaste === 'Other' ? (formData.subCasteCustom?.trim() || '') : formData.subCaste
+      const resolvedGotra = formData.gotra === 'Other' ? (formData.gotraCustom?.trim() || '') : formData.gotra
+      const resolvedRashi = formData.rashi === 'Other' ? (formData.rashiCustom?.trim() || '') : formData.rashi
+      const resolvedNakshatra = formData.nakshatra === 'Other' ? (formData.nakshatraCustom?.trim() || '') : formData.nakshatra
+
       const stepPayloads = [
         {
-          religion: formData.religion,
-          caste: formData.caste,
-          subCaste: formData.subCaste,
-          gotra: formData.gotra,
-          rashi: formData.rashi,
-          nakshatra: formData.nakshatra,
+          religion: resolvedReligion,
+          caste: resolvedCaste,
+          subCaste: resolvedSubCaste,
+          gotra: resolvedGotra,
+          rashi: resolvedRashi,
+          nakshatra: resolvedNakshatra,
           manglik: formData.manglik,
           timeOfBirth: formData.timeOfBirth,
           placeOfBirth: formData.placeOfBirth
@@ -486,12 +554,112 @@ const ProfileCompletionModal = ({ isOpen, onClose, onComplete, required = false 
               </div>
               <h3 className="text-xl font-semibold text-primary-maroon mb-4">Community & Birth Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <SelectField label="Religion" required value={formData.religion} onChange={(e) => setField('religion', e.target.value)} error={errors.religion} options={RELIGIONS} />
-                <SelectField label="Caste" required={formData.religion && formData.religion !== 'Other'} value={formData.caste} onChange={(e) => { setField('caste', e.target.value); setField('subCaste', '') }} error={errors.caste} options={casteOptions} />
-                <SelectField label="Sub Caste" value={formData.subCaste} onChange={(e) => setField('subCaste', e.target.value)} options={subCasteOptions} />
-                <SelectField label="Gotra" value={formData.gotra} onChange={(e) => setField('gotra', e.target.value)} options={GOTRAS} />
-                <SelectField label="Rashi (Zodiac)" value={formData.rashi} onChange={(e) => setField('rashi', e.target.value)} options={RASHIS} />
-                <SelectField label="Nakshatra" value={formData.nakshatra} onChange={(e) => setField('nakshatra', e.target.value)} options={NAKSHATRAS} />
+                <SelectField
+                  label="Religion"
+                  required
+                  value={formData.religion}
+                  onChange={(e) => {
+                    setField('religion', e.target.value)
+                    if (e.target.value !== 'Other') setField('religionCustom', '')
+                  }}
+                  error={errors.religion}
+                  options={RELIGIONS}
+                />
+                {formData.religion === 'Other' && (
+                  <Input
+                    label="Religion (Custom)"
+                    required
+                    value={formData.religionCustom}
+                    onChange={(e) => setField('religionCustom', e.target.value)}
+                    error={errors.religionCustom}
+                  />
+                )}
+                <SelectField
+                  label="Caste"
+                  required={formData.religion && formData.religion !== 'Other'}
+                  value={formData.caste}
+                  onChange={(e) => {
+                    setField('caste', e.target.value)
+                    setField('subCaste', '')
+                    if (e.target.value !== 'Other') setField('casteCustom', '')
+                  }}
+                  error={errors.caste}
+                  options={casteOptions}
+                />
+                {formData.caste === 'Other' && (
+                  <Input
+                    label="Caste (Custom)"
+                    required
+                    value={formData.casteCustom}
+                    onChange={(e) => setField('casteCustom', e.target.value)}
+                    error={errors.casteCustom}
+                  />
+                )}
+                <SelectField
+                  label="Sub Caste"
+                  value={formData.subCaste}
+                  onChange={(e) => setField('subCaste', e.target.value)}
+                  options={subCasteOptions}
+                />
+                {formData.subCaste === 'Other' && (
+                  <Input
+                    label="Sub Caste (Custom)"
+                    value={formData.subCasteCustom}
+                    onChange={(e) => setField('subCasteCustom', e.target.value)}
+                    error={errors.subCasteCustom}
+                  />
+                )}
+                <SelectField
+                  label="Gotra"
+                  value={formData.gotra}
+                  onChange={(e) => {
+                    setField('gotra', e.target.value)
+                    if (e.target.value !== 'Other') setField('gotraCustom', '')
+                  }}
+                  options={GOTRAS}
+                />
+                {formData.gotra === 'Other' && (
+                  <Input
+                    label="Gotra (Custom)"
+                    value={formData.gotraCustom}
+                    onChange={(e) => setField('gotraCustom', e.target.value)}
+                    error={errors.gotraCustom}
+                  />
+                )}
+                <SelectField
+                  label="Rashi (Zodiac)"
+                  value={formData.rashi}
+                  onChange={(e) => {
+                    setField('rashi', e.target.value)
+                    if (e.target.value !== 'Other') setField('rashiCustom', '')
+                  }}
+                  options={rashiOptions}
+                />
+                {formData.rashi === 'Other' && (
+                  <Input
+                    label="Rashi (Custom)"
+                    value={formData.rashiCustom}
+                    onChange={(e) => setField('rashiCustom', e.target.value)}
+                    error={errors.rashiCustom}
+                  />
+                )}
+                <SelectField
+                  label="Nakshatra"
+                  value={formData.nakshatra}
+                  onChange={(e) => {
+                    setField('nakshatra', e.target.value)
+                    if (e.target.value !== 'Other') setField('nakshatraCustom', '')
+                  }}
+                  options={nakshatraOptions}
+                />
+                {formData.nakshatra === 'Other' && (
+                  <Input
+                    label="Nakshatra (Custom)"
+                    value={formData.nakshatraCustom}
+                    onChange={(e) => setField('nakshatraCustom', e.target.value)}
+                    error={errors.nakshatraCustom}
+                  />
+                )}
                 <SelectField label="Manglik" value={formData.manglik} onChange={(e) => setField('manglik', e.target.value)} options={MANGLIK_OPTIONS} />
                 <Input label="Time of Birth" value={formData.timeOfBirth} onChange={(e) => setField('timeOfBirth', e.target.value)} placeholder="e.g. 10:30 AM" />
                 <Input label="Place of Birth" value={formData.placeOfBirth} onChange={(e) => setField('placeOfBirth', e.target.value)} placeholder="City, State" className="sm:col-span-2" />

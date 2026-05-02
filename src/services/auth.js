@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth'
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { auth, db } from './firebase'
-import { uploadProfilePhoto as uploadToCloudinary } from './cloudinary'
+import { uploadFile } from './storage'
 import { PROFILE_STATUS } from '../utils/constants'
 
 // User Registration
@@ -290,9 +290,11 @@ export const saveProfileStep = async (userId, stepKey, stepData, nextStep) => {
   }
 }
 
-// Upload profile photo to Cloudinary (URL stored in Firebase/Firestore)
+// Upload profile photo to Firebase Storage
 export const uploadProfilePhoto = async (userId, file, onProgress) => {
-  return uploadToCloudinary(file, userId, onProgress)
+  const extension = file.name.split('.').pop() || 'jpg'
+  const path = `profiles/${userId}/photo_${Date.now()}.${extension}`
+  return uploadFile(file, path, onProgress)
 }
 
 // Get User Profile

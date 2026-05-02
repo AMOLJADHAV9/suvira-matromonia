@@ -19,6 +19,7 @@ import PrivacyPage from '../pages/PrivacyPage'
 import TermsPage from '../pages/TermsPage'
 import FAQPage from '../pages/FAQPage'
 import EmailVerificationPage from '../pages/EmailVerificationPage'
+import MyProfilePage from '../pages/MyProfilePage'
 import CompleteProfilePage from '../pages/CompleteProfilePage'
 
 const PROFILE_COMPLETION_THRESHOLD = 50
@@ -41,7 +42,7 @@ const PremiumRoute = ({ children }) => {
 // Protected Route Component (requires auth + email verified)
 const ProtectedRoute = ({ children, requiredRole = null, requireProfileComplete = false, allowUnverified = false }) => {
   const { isAuthenticated, isRole, currentUser, loading, getProfileCompletion } = useAuth()
-  
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -49,7 +50,7 @@ const ProtectedRoute = ({ children, requiredRole = null, requireProfileComplete 
       </div>
     )
   }
-  
+
   if (!currentUser) {
     return <Navigate to="/login" replace />
   }
@@ -57,7 +58,7 @@ const ProtectedRoute = ({ children, requiredRole = null, requireProfileComplete 
   if (!allowUnverified && !currentUser.emailVerified) {
     return <Navigate to="/verify-email" replace />
   }
-  
+
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />
   }
@@ -65,7 +66,7 @@ const ProtectedRoute = ({ children, requiredRole = null, requireProfileComplete 
   if (requireProfileComplete && getProfileCompletion() < PROFILE_COMPLETION_THRESHOLD) {
     return <Navigate to="/complete-profile" replace />
   }
-  
+
   if (requiredRole && !isRole(requiredRole)) {
     if (requiredRole === 'admin') {
       return <Navigate to="/admin/login" replace state={{ message: 'Admin access required' }} />
@@ -125,7 +126,7 @@ const AdminAuthRoute = ({ children }) => {
 // Public Route Component (redirects authenticated users)
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, currentUser, loading, getProfileCompletion } = useAuth()
-  
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -133,12 +134,12 @@ const PublicRoute = ({ children }) => {
       </div>
     )
   }
-  
+
   // Logged in but email not verified -> verify-email page
   if (currentUser && !currentUser.emailVerified) {
     return <Navigate to="/verify-email" replace />
   }
-  
+
   if (isAuthenticated()) {
     const completion = getProfileCompletion()
     if (completion < PROFILE_COMPLETION_THRESHOLD) {
@@ -146,7 +147,7 @@ const PublicRoute = ({ children }) => {
     }
     return <Navigate to="/dashboard" replace />
   }
-  
+
   return children
 }
 
@@ -165,99 +166,107 @@ const AppRoutes = () => {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/faq" element={<FAQPage />} />
-        
+
         {/* Auth Routes */}
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
             <PublicRoute>
               <LoginPage />
             </PublicRoute>
-          } 
+          }
         />
-        <Route 
-          path="/register" 
+        <Route
+          path="/register"
           element={
             <PublicRoute>
               <RegisterPage />
             </PublicRoute>
-          } 
+          }
         />
-        <Route 
-          path="/verify-email" 
-          element={<EmailVerificationPage />} 
+        <Route
+          path="/verify-email"
+          element={<EmailVerificationPage />}
         />
-        <Route 
-          path="/complete-profile" 
+        <Route
+          path="/complete-profile"
           element={
             <ProtectedRoute>
               <CompleteProfilePage />
             </ProtectedRoute>
           }
         />
-        
+
         {/* Protected User Routes */}
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute requireProfileComplete>
               <DashboardPage />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/search" 
+        <Route
+          path="/search"
           element={
             <ProtectedRoute requireProfileComplete>
               <SearchPage />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/profile/:userId" 
+        <Route
+          path="/profile/:userId"
           element={
             <ProtectedRoute requireProfileComplete>
               <ProfileViewPage />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/interests" 
+        <Route
+          path="/my-profile"
+          element={
+            <ProtectedRoute>
+              <MyProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interests"
           element={
             <ProtectedRoute requireProfileComplete>
               <InterestPage />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/chat" 
+        <Route
+          path="/chat"
           element={
             <ProtectedRoute requireProfileComplete>
               <PremiumRoute>
                 <ChatPage />
               </PremiumRoute>
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/chat/:partnerId" 
+        <Route
+          path="/chat/:partnerId"
           element={
             <ProtectedRoute requireProfileComplete>
               <PremiumRoute>
                 <ChatPage />
               </PremiumRoute>
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/subscription" 
+        <Route
+          path="/subscription"
           element={
             <ProtectedRoute requireProfileComplete>
               <SubscriptionPage />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Admin Auth (Login / Register) */}
         <Route
           path="/admin/login"
@@ -292,7 +301,7 @@ const AppRoutes = () => {
             </AdminRoute>
           }
         />
-        
+
         {/* 404 Route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -300,21 +309,21 @@ const AppRoutes = () => {
       {/* Modal routes (login/register) rendered on top when backgroundLocation is set */}
       {state && (
         <Routes>
-          <Route 
-            path="/login" 
+          <Route
+            path="/login"
             element={
               <PublicRoute>
                 <LoginPage />
               </PublicRoute>
-            } 
+            }
           />
-          <Route 
-            path="/register" 
+          <Route
+            path="/register"
             element={
               <PublicRoute>
                 <RegisterPage />
               </PublicRoute>
-            } 
+            }
           />
         </Routes>
       )}

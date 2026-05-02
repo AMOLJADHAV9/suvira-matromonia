@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa'
+import { FaFacebook, FaInstagram, FaLinkedin, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa'
 import { cornerFlowerImage } from '../../assets/wedding'
 
 const Footer = () => {
@@ -72,16 +72,16 @@ const Footer = () => {
             </p>
             
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-300 hover:text-primary-gold transition-colors">
+              <a href="https://www.facebook.com/share/g/1KdvaEHgDQ/" className="text-gray-300 hover:text-primary-gold transition-colors">
                 <FaFacebook size={20} />
               </a>
-              <a href="#" className="text-gray-300 hover:text-primary-gold transition-colors">
+              {/* <a href="#" className="text-gray-300 hover:text-primary-gold transition-colors">
                 <FaTwitter size={20} />
-              </a>
-              <a href="#" className="text-gray-300 hover:text-primary-gold transition-colors">
+              </a> */}
+              <a href="https://www.instagram.com/suvira_matrimony_sansatha/tagged/" className="text-gray-300 hover:text-primary-gold transition-colors">
                 <FaInstagram size={20} />
               </a>
-              <a href="#" className="text-gray-300 hover:text-primary-gold transition-colors">
+              <a href="https://www.linkedin.com/in/suvira-matrimonial-8a2186229/" className="text-gray-300 hover:text-primary-gold transition-colors">
                 <FaLinkedin size={20} />
               </a>
             </div>
@@ -143,7 +143,7 @@ const Footer = () => {
               <div className="flex items-start space-x-3">
                 <FaEnvelope className="text-primary-gold mt-1" />
                 <div>
-                  <p className="text-gray-300">support@suviramaternity.com</p>
+                  <p className="text-gray-300">suviramatrimonial@gmail.com</p>
                   <p className="text-gray-400 text-sm">24/7 Customer Support</p>
                 </div>
               </div>
@@ -151,15 +151,15 @@ const Footer = () => {
               <div className="flex items-start space-x-3">
                 <FaPhone className="text-primary-gold mt-1" />
                 <div>
-                  <p className="text-gray-300">+91 98765 43210</p>
-                  <p className="text-gray-400 text-sm">Mon-Sat 9:00 AM - 8:00 PM</p>
+                  <p className="text-gray-300">+91 9552415513</p>
+                  {/* <p className="text-gray-400 text-sm">Mon-Sat 9:00 AM - 8:00 PM</p> */}
                 </div>
               </div>
               
               <div className="flex items-start space-x-3">
                 <FaMapMarkerAlt className="text-primary-gold mt-1" />
                 <div>
-                  <p className="text-gray-300">Mumbai, Maharashtra</p>
+                  <p className="text-gray-300">Bharat Society Shop No. 4, Latur, Maharashtra</p>
                   <p className="text-gray-400 text-sm">India</p>
                 </div>
               </div>
