@@ -1,32 +1,98 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
-const {setGlobalOptions} = require("firebase-functions");
-const {onRequest} = require("firebase-functions/https");
+const { setGlobalOptions } = require("firebase-functions");
+const { onRequest } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
+const cors = require("cors")({ origin: true });
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
 setGlobalOptions({ maxInstances: 10 });
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+// Initialize Razorpay
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_Sk5NRNRnvH7M77",
+  key_secret: process.env.RAZORPAY_KEY_SECRET || "N3WQtEHFBmTLrLPsva9pKtsW",
+});
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+// Mock packages mapped by ID
+const PACKAGES = {
+  basic: { amount: 999, currency: "INR" },
+  premium: { amount: 1999, currency: "INR" },
+  vip: { amount: 3999, currency: "INR" },
+  // If the user's frontend passes numeric IDs or different names, we should handle them
+  // For safety, let's just use the amount provided by the frontend if packageId isn't found, 
+  // or just default to 999 to avoid crashing. 
+};
+
+// 1. Create Order
+exports.createRazorpayOrderHttp = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
+      }
+
+      const { packageId } = req.body;
+      let amount = 999;
+      let currency = "INR";
+
+      if (PACKAGES[packageId]) {
+        amount = PACKAGES[packageId].amount;
+        currency = PACKAGES[packageId].currency;
+      } else if (typeof packageId === 'number') {
+        // Fallback if packageId is actually just the amount
+        amount = packageId;
+      }
+
+      const options = {
+        amount: amount * 100, // Razorpay amount is in paise
+        currency: currency,
+        receipt: `receipt_${Date.now()}`,
+      };
+
+      const order = await razorpay.orders.create(options);
+
+      return res.status(200).json({
+        orderId: order.id,
+        amount: options.amount,
+        currency: options.currency,
+      });
+    } catch (error) {
+      logger.error("Error creating Razorpay order:", error);
+      return res.status(500).json({ error: "Failed to create order" });
+    }
+  });
+});
+
+// 2. Verify Payment
+exports.verifyRazorpayPaymentHttp = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
+      }
+
+      const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+
+      if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+        return res.status(400).json({ error: "Missing payment details" });
+      }
+
+      const secret = process.env.RAZORPAY_KEY_SECRET || "N3WQtEHFBmTLrLPsva9pKtsW";
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+      const expectedSignature = crypto
+        .createHmac("sha256", secret)
+        .update(body.toString())
+        .digest("hex");
+
+      if (expectedSignature === razorpay_signature) {
+        return res.status(200).json({ success: true, message: "Payment verified successfully" });
+      } else {
+        return res.status(400).json({ success: false, message: "Invalid signature" });
+      }
+    } catch (error) {
+      logger.error("Error verifying payment:", error);
+      return res.status(500).json({ error: "Verification failed" });
+    }
+  });
+});
