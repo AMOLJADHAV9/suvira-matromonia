@@ -91,16 +91,6 @@ const InterestCard = ({ interest, profile, type, onAccept, onReject, loading, is
             </Button>
           </>
         )}
-        {type === 'sent' && interest.status === 'accepted' && !isAdmin && (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => navigate(`/chat/${profile?.id}`)}
-            icon={<FaHeart />}
-          >
-            Message
-          </Button>
-        )}
       </div>
     </motion.div>
   )

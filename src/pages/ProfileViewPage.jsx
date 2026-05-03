@@ -441,27 +441,7 @@ const ProfileViewPage = () => {
                         Declined
                       </span>
                     )}
-                    {!isAdmin() && interest?.direction === 'sent' && interest?.status === 'accepted' && canAccessPremium() && (
-                      <Button
-                        variant="primary"
-                        size="lg"
-                        icon={<FaEnvelope />}
-                        onClick={() => navigate(`/chat/${profile.id}`)}
-                        className="transition-all duration-300"
-                      >
-                        Message
-                      </Button>
-                    )}
-                    {!isAdmin() && interest?.direction === 'sent' && interest?.status === 'accepted' && !canAccessPremium() && (
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={() => navigate('/subscription')}
-                        className="border-primary-maroon text-primary-maroon"
-                      >
-                        Upgrade to Message
-                      </Button>
-                    )}
+
                     {interestError && <span className="text-sm text-red-600">{interestError}</span>}
                     {!isAdmin() && (
                       <div className="w-full mt-4">
