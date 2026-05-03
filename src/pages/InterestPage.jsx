@@ -12,7 +12,7 @@ import {
 import Header from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
 import Button from '../components/ui/Button'
-import { FaHeart, FaUser, FaCheck, FaTimes, FaInbox, FaPaperPlane } from 'react-icons/fa'
+import { FaHeart, FaUser, FaCheck, FaTimes, FaInbox, FaPaperPlane, FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
 
 const STATUS_BADGE = {
   pending: { label: 'Pending', className: 'bg-amber-100 text-amber-800 border-amber-200' },
@@ -20,7 +20,7 @@ const STATUS_BADGE = {
   rejected: { label: 'Rejected', className: 'bg-gray-100 text-gray-600 border-gray-200' },
 }
 
-const InterestCard = ({ interest, profile, type, onAccept, onReject, loading }) => {
+const InterestCard = ({ interest, profile, type, onAccept, onReject, loading, isAdmin }) => {
   const navigate = useNavigate()
   const photoUrl = getProfilePhotoUrl(profile)
   const statusBadge = STATUS_BADGE[interest.status] || STATUS_BADGE.pending
@@ -91,7 +91,7 @@ const InterestCard = ({ interest, profile, type, onAccept, onReject, loading }) 
             </Button>
           </>
         )}
-        {type === 'sent' && interest.status === 'accepted' && (
+        {type === 'sent' && interest.status === 'accepted' && !isAdmin && (
           <Button
             variant="primary"
             size="sm"
@@ -107,7 +107,7 @@ const InterestCard = ({ interest, profile, type, onAccept, onReject, loading }) 
 }
 
 const InterestPage = () => {
-  const { currentUser, isPremiumUser } = useAuth()
+  const { currentUser, isPremiumUser, isAdmin } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('incoming')
   const [incoming, setIncoming] = useState([])
@@ -172,6 +172,19 @@ const InterestPage = () => {
     setActionLoading(null)
   }
 
+  const pendingIncoming = incoming.filter(i => i.status === 'pending')
+  const pendingSent = sent.filter(i => i.status === 'pending')
+  
+  const acceptedList = [
+    ...incoming.filter(i => i.status === 'accepted').map(i => ({ ...i, listType: 'incoming' })),
+    ...sent.filter(i => i.status === 'accepted').map(i => ({ ...i, listType: 'sent' }))
+  ].sort((a, b) => (b.updatedAt?.toMillis?.() || 0) - (a.updatedAt?.toMillis?.() || 0))
+  
+  const rejectedList = [
+    ...incoming.filter(i => i.status === 'rejected').map(i => ({ ...i, listType: 'incoming' })),
+    ...sent.filter(i => i.status === 'rejected').map(i => ({ ...i, listType: 'sent' }))
+  ].sort((a, b) => (b.updatedAt?.toMillis?.() || 0) - (a.updatedAt?.toMillis?.() || 0))
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary-cream to-white">
       <Header />
@@ -183,28 +196,50 @@ const InterestPage = () => {
           Manage incoming and sent interests
         </p>
 
-        <div className="flex gap-2 mb-6 border-b border-primary-gold/20">
+        <div className="flex flex-wrap gap-2 mb-6 border-b border-primary-gold/20 overflow-x-auto pb-1">
           <button
             type="button"
             onClick={() => setActiveTab('incoming')}
-            className={`px-4 py-2 font-medium rounded-t-lg transition-colors ${
+            className={`whitespace-nowrap px-4 py-2 font-medium rounded-t-lg transition-colors ${
               activeTab === 'incoming'
                 ? 'bg-white border border-primary-gold/20 border-b-0 text-primary-maroon'
                 : 'text-gray-600 hover:text-primary-maroon'
             }`}
           >
-            <FaInbox className="inline mr-2" /> Incoming ({incoming.length})
+            <FaInbox className="inline mr-2" /> Incoming ({pendingIncoming.length})
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('sent')}
-            className={`px-4 py-2 font-medium rounded-t-lg transition-colors ${
+            className={`whitespace-nowrap px-4 py-2 font-medium rounded-t-lg transition-colors ${
               activeTab === 'sent'
                 ? 'bg-white border border-primary-gold/20 border-b-0 text-primary-maroon'
                 : 'text-gray-600 hover:text-primary-maroon'
             }`}
           >
-            <FaPaperPlane className="inline mr-2" /> Sent ({sent.length})
+            <FaPaperPlane className="inline mr-2" /> Sent ({pendingSent.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('accepted')}
+            className={`whitespace-nowrap px-4 py-2 font-medium rounded-t-lg transition-colors ${
+              activeTab === 'accepted'
+                ? 'bg-white border border-primary-gold/20 border-b-0 text-primary-maroon'
+                : 'text-gray-600 hover:text-primary-maroon'
+            }`}
+          >
+            <FaCheckCircle className="inline mr-2" /> Accepted ({acceptedList.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('rejected')}
+            className={`whitespace-nowrap px-4 py-2 font-medium rounded-t-lg transition-colors ${
+              activeTab === 'rejected'
+                ? 'bg-white border border-primary-gold/20 border-b-0 text-primary-maroon'
+                : 'text-gray-600 hover:text-primary-maroon'
+            }`}
+          >
+            <FaTimesCircle className="inline mr-2" /> Rejected ({rejectedList.length})
           </button>
         </div>
 
@@ -221,13 +256,13 @@ const InterestPage = () => {
           </div>
         ) : activeTab === 'incoming' ? (
           <div className="space-y-4">
-            {incoming.length === 0 ? (
+            {pendingIncoming.length === 0 ? (
               <div className="bg-white rounded-2xl p-12 text-center border border-primary-gold/20">
                 <FaInbox className="text-4xl text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-600">No incoming interests yet</p>
+                <p className="text-gray-600">No pending incoming interests</p>
               </div>
             ) : (
-              incoming.map((i) => (
+              pendingIncoming.map((i) => (
                 <InterestCard
                   key={i.id}
                   interest={i}
@@ -236,16 +271,17 @@ const InterestPage = () => {
                   onAccept={handleAccept}
                   onReject={handleReject}
                   loading={actionLoading === i.id}
+                  isAdmin={isAdmin ? isAdmin() : false}
                 />
               ))
             )}
           </div>
-        ) : (
+        ) : activeTab === 'sent' ? (
           <div className="space-y-4">
-            {sent.length === 0 ? (
+            {pendingSent.length === 0 ? (
               <div className="bg-white rounded-2xl p-12 text-center border border-primary-gold/20">
                 <FaPaperPlane className="text-4xl text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-600">No sent interests yet</p>
+                <p className="text-gray-600">No pending sent interests</p>
                 <Button
                   variant="primary"
                   className="mt-4"
@@ -255,13 +291,54 @@ const InterestPage = () => {
                 </Button>
               </div>
             ) : (
-              sent.map((i) => (
+              pendingSent.map((i) => (
                 <InterestCard
                   key={i.id}
                   interest={i}
                   profile={profiles[i.receiverId]}
                   type="sent"
                   loading={false}
+                  isAdmin={isAdmin ? isAdmin() : false}
+                />
+              ))
+            )}
+          </div>
+        ) : activeTab === 'accepted' ? (
+          <div className="space-y-4">
+            {acceptedList.length === 0 ? (
+              <div className="bg-white rounded-2xl p-12 text-center border border-primary-gold/20">
+                <FaCheckCircle className="text-4xl text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-600">No accepted interests yet</p>
+              </div>
+            ) : (
+              acceptedList.map((i) => (
+                <InterestCard
+                  key={i.id}
+                  interest={i}
+                  profile={profiles[i.listType === 'incoming' ? i.senderId : i.receiverId]}
+                  type={i.listType}
+                  loading={false}
+                  isAdmin={isAdmin ? isAdmin() : false}
+                />
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {rejectedList.length === 0 ? (
+              <div className="bg-white rounded-2xl p-12 text-center border border-primary-gold/20">
+                <FaTimesCircle className="text-4xl text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-600">No rejected interests</p>
+              </div>
+            ) : (
+              rejectedList.map((i) => (
+                <InterestCard
+                  key={i.id}
+                  interest={i}
+                  profile={profiles[i.listType === 'incoming' ? i.senderId : i.receiverId]}
+                  type={i.listType}
+                  loading={false}
+                  isAdmin={isAdmin ? isAdmin() : false}
                 />
               ))
             )}

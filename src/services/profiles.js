@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, limit, doc, getDoc, orderBy } from 'firebase/firestore'
+import { collection, query, where, getDocs, limit, doc, getDoc, orderBy, updateDoc, increment } from 'firebase/firestore'
 import { db } from './firebase'
 import { PROFILE_STATUS } from '../utils/constants'
 
@@ -433,6 +433,11 @@ export const getProfileById = async (targetUserId, currentUserId, currentUserGen
       log('Blocked: same-gender profile view attempt', { currentUserGender, targetGender })
       return { success: false, error: 'Access denied' }
     }
+
+    // Increment profile views asynchronously (don't wait for it to finish)
+    updateDoc(docRef, {
+      'stats.profileViews': increment(1)
+    }).catch(err => console.error('Failed to increment profileViews:', err));
 
     const profile = { id: docSnap.id, ...data }
     log('Profile fetched successfully:', targetUserId)

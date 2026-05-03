@@ -10,6 +10,7 @@ import {
   getDoc,
   orderBy,
   serverTimestamp,
+  increment,
 } from 'firebase/firestore'
 import { db } from './firebase'
 
@@ -80,6 +81,15 @@ export const sendInterest = async (senderId, receiverId, senderGender, receiverG
     if (!recordResult.success && !recordResult.alreadyContacted) {
       console.warn('[Interests] recordContact failed after send:', recordResult.error)
     }
+
+    // Increment user stats asynchronously
+    updateDoc(doc(db, 'users', senderId), {
+      'stats.interestsSent': increment(1)
+    }).catch(err => console.error('Failed to update interestsSent:', err));
+
+    updateDoc(doc(db, 'users', receiverId), {
+      'stats.interestsReceived': increment(1)
+    }).catch(err => console.error('Failed to update interestsReceived:', err));
 
     const { checkSpamAndFlag } = await import('./admin/adminInterests')
     const spam = await checkSpamAndFlag(senderId)
@@ -161,6 +171,15 @@ export const updateInterestStatus = async (interestId, receiverId, status) => {
           })
         }
       }
+
+      // Increment matches stat for both users asynchronously
+      updateDoc(doc(db, 'users', data.senderId), {
+        'stats.matches': increment(1)
+      }).catch(err => console.error('Failed to update matches for sender:', err));
+
+      updateDoc(doc(db, 'users', data.receiverId), {
+        'stats.matches': increment(1)
+      }).catch(err => console.error('Failed to update matches for receiver:', err));
     }
     return { success: true, data: { id: snap.id, ...data, status } }
   } catch (err) {

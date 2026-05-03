@@ -15,7 +15,7 @@ import { PROFILE_STATUS } from '../utils/constants'
 
 const DashboardPage = () => {
   const navigate = useNavigate()
-  const { userProfile, currentUser, isPremiumUser, getProfileCompletion, setUserProfile } = useAuth()
+  const { userProfile, currentUser, isPremiumUser, getProfileCompletion, setUserProfile, getActivePackage } = useAuth()
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -94,6 +94,13 @@ const DashboardPage = () => {
       )
     }
     return null
+  }
+
+  const formatFirestoreDate = (dateObj) => {
+    if (!dateObj) return 'N/A'
+    if (dateObj.toDate) return dateObj.toDate().toLocaleDateString()
+    if (dateObj.seconds) return new Date(dateObj.seconds * 1000).toLocaleDateString()
+    return new Date(dateObj).toLocaleDateString()
   }
 
   return (
@@ -336,11 +343,41 @@ const DashboardPage = () => {
               <div className="flex justify-between">
                 <span className="text-gray-600">Member Since:</span>
                 <span className="font-medium">
-                  {userProfile?.createdAt
-                    ? new Date(userProfile.createdAt.seconds * 1000).toLocaleDateString()
-                    : 'N/A'}
+                  {formatFirestoreDate(userProfile?.createdAt)}
                 </span>
               </div>
+              {isPremiumUser() && userProfile?.subscription && (
+                <>
+                  {getActivePackage() && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Plan Name:</span>
+                        <span className="font-medium text-primary-gold">
+                          {getActivePackage().name}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Price:</span>
+                        <span className="font-medium">
+                          ₹{getActivePackage().price.toLocaleString()}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Plan Purchased:</span>
+                    <span className="font-medium">
+                      {formatFirestoreDate(userProfile.subscription.startDate || userProfile.subscription.purchaseDate)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Plan Expires:</span>
+                    <span className="font-medium">
+                      {formatFirestoreDate(userProfile.subscription.expiryDate)}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
             {!isPremiumUser() && (
               <Button variant="primary" className="w-full mt-4" onClick={() => navigate('/subscription')}>

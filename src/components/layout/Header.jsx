@@ -18,8 +18,7 @@ const Header = () => {
     ...(isAuthenticated() && !isAdmin() ? [
       { name: 'Dashboard', path: '/dashboard' },
       { name: 'Find Matches', path: '/search' },
-      { name: 'Interests', path: '/interests' },
-      ...(canAccessPremium() ? [{ name: 'Chat', path: '/chat' }] : [])
+      { name: 'Interests', path: '/interests' }
     ] : [])
   ]
 

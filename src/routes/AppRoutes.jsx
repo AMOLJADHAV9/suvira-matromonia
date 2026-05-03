@@ -26,7 +26,7 @@ const PROFILE_COMPLETION_THRESHOLD = 50
 
 // Premium Route (requires active subscription or admin - for Chat)
 const PremiumRoute = ({ children }) => {
-  const { canAccessPremium, currentUser, loading } = useAuth()
+  const { canAccessPremium, currentUser, loading, isAdmin } = useAuth()
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -35,6 +35,7 @@ const PremiumRoute = ({ children }) => {
     )
   }
   if (!currentUser) return <Navigate to="/login" replace />
+  if (isAdmin && isAdmin()) return <Navigate to="/admin" replace />
   if (!canAccessPremium()) return <Navigate to="/subscription" replace state={{ message: 'Active subscription required' }} />
   return children
 }

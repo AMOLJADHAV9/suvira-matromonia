@@ -4,6 +4,9 @@ const logger = require("firebase-functions/logger");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const cors = require("cors")({ origin: true });
+const admin = require("firebase-admin");
+
+admin.initializeApp();
 
 setGlobalOptions({ maxInstances: 10 });
 
@@ -13,14 +16,12 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET || "N3WQtEHFBmTLrLPsva9pKtsW",
 });
 
-// Mock packages mapped by ID
+// Packages mapped by ID matching the frontend definitions
 const PACKAGES = {
-  basic: { amount: 999, currency: "INR" },
-  premium: { amount: 1999, currency: "INR" },
-  vip: { amount: 3999, currency: "INR" },
-  // If the user's frontend passes numeric IDs or different names, we should handle them
-  // For safety, let's just use the amount provided by the frontend if packageId isn't found, 
-  // or just default to 999 to avoid crashing. 
+  remarriage: { amount: 2100, currency: "INR" },
+  platinum: { amount: 2500, currency: "INR" },
+  gold: { amount: 3600, currency: "INR" },
+  nri: { amount: 4100, currency: "INR" },
 };
 
 // 1. Create Order
@@ -86,7 +87,54 @@ exports.verifyRazorpayPaymentHttp = onRequest((req, res) => {
         .digest("hex");
 
       if (expectedSignature === razorpay_signature) {
-        return res.status(200).json({ success: true, message: "Payment verified successfully" });
+        // Payment verified successfully
+        
+        // Now update the user's Firestore document
+        const authHeader = req.headers.authorization || "";
+        if (!authHeader.startsWith("Bearer ")) {
+          logger.error("No valid auth token found for successful payment");
+          return res.status(401).json({ success: false, message: "Payment successful but failed to update profile (unauthorized)" });
+        }
+        const idToken = authHeader.split("Bearer ")[1];
+        
+        let uid;
+        try {
+          const decodedToken = await admin.auth().verifyIdToken(idToken);
+          uid = decodedToken.uid;
+        } catch (authErr) {
+          logger.error("Error verifying auth token:", authErr);
+          return res.status(401).json({ success: false, message: "Payment successful but failed to update profile (invalid token)" });
+        }
+
+        const packageIdToUse = req.body.packageId || 'unknown';
+        const pkgConfig = PACKAGES[packageIdToUse] || { amount: 0, currency: "INR" };
+        
+        // Calculate expiry date (assuming 12 months for remarriage, gold, nri and 6 months for platinum based on frontend code)
+        // If we don't know exactly, default to 12 months.
+        let validityMonths = 12;
+        if (packageIdToUse === 'platinum') validityMonths = 6;
+        
+        const expiryDate = new Date();
+        expiryDate.setMonth(expiryDate.getMonth() + validityMonths);
+
+        try {
+          await admin.firestore().collection("users").doc(uid).update({
+            role: "premium_user",
+            subscription: {
+              packageId: packageIdToUse,
+              isActive: true,
+              purchaseDate: admin.firestore.FieldValue.serverTimestamp(),
+              expiryDate: admin.firestore.Timestamp.fromDate(expiryDate),
+              paymentId: razorpay_payment_id,
+              orderId: razorpay_order_id
+            }
+          });
+          logger.info(`Successfully updated user ${uid} to premium_user with package ${packageIdToUse}`);
+          return res.status(200).json({ success: true, message: "Payment verified successfully and profile upgraded" });
+        } catch (dbErr) {
+          logger.error(`Error updating Firestore for user ${uid}:`, dbErr);
+          return res.status(500).json({ success: false, message: "Payment successful but database update failed" });
+        }
       } else {
         return res.status(400).json({ success: false, message: "Invalid signature" });
       }
