@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaFacebook, FaInstagram, FaLinkedin, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa'
+import { FaFacebook, FaInstagram, FaLinkedin, FaEnvelope, FaPhone, FaMapMarkerAlt, FaCcVisa, FaCcMastercard, FaWallet } from 'react-icons/fa'
 import { cornerFlowerImage } from '../../assets/wedding'
 
 const Footer = () => {
@@ -189,10 +189,10 @@ const Footer = () => {
           
           <div className="flex items-center space-x-6 text-sm text-gray-400">
             <span>Secure Payment</span>
-            <div className="flex space-x-2">
-              <div className="w-8 h-5 bg-white rounded-sm"></div>
-              <div className="w-8 h-5 bg-white rounded-sm"></div>
-              <div className="w-8 h-5 bg-white rounded-sm"></div>
+            <div className="flex space-x-3 text-2xl text-gray-300">
+              <FaCcVisa className="hover:text-white transition-colors" title="Visa" />
+              <FaCcMastercard className="hover:text-white transition-colors" title="Mastercard" />
+              <FaWallet className="hover:text-white transition-colors" title="UPI & Wallets" />
             </div>
           </div>
         </motion.div>
