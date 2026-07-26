@@ -12,8 +12,8 @@ setGlobalOptions({ maxInstances: 10 });
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_Sk5NRNRnvH7M77",
-  key_secret: process.env.RAZORPAY_KEY_SECRET || "N3WQtEHFBmTLrLPsva9pKtsW",
+  key_id: process.env.RAZORPAY_KEY_ID || "rzp_live_TI65PczOuaDz5S",
+  key_secret: process.env.RAZORPAY_KEY_SECRET || "gzcowEIAHC1Vuf3QU0V3u5FP",
 });
 
 // Packages mapped by ID matching the frontend definitions
@@ -59,7 +59,8 @@ exports.createRazorpayOrderHttp = onRequest((req, res) => {
       });
     } catch (error) {
       logger.error("Error creating Razorpay order:", error);
-      return res.status(500).json({ error: "Failed to create order" });
+      const errMsg = error?.error?.description || error?.message || "Failed to create order";
+      return res.status(500).json({ error: errMsg });
     }
   });
 });
@@ -78,7 +79,7 @@ exports.verifyRazorpayPaymentHttp = onRequest((req, res) => {
         return res.status(400).json({ error: "Missing payment details" });
       }
 
-      const secret = process.env.RAZORPAY_KEY_SECRET || "N3WQtEHFBmTLrLPsva9pKtsW";
+      const secret = process.env.RAZORPAY_KEY_SECRET || "gzcowEIAHC1Vuf3QU0V3u5FP";
       const body = razorpay_order_id + "|" + razorpay_payment_id;
 
       const expectedSignature = crypto

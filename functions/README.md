@@ -9,7 +9,7 @@
    ```
    Example for test keys:
    ```bash
-    firebase functions:config:set razorpay.key_id="rzp_test_Sk5NRNRnvH7M77" razorpay.key_secret="N3WQtEHFBmTLrLPsva9pKtsW"
+    firebase functions:config:set razorpay.key_id="rzp_test_THkgkF6zLYWKZH" razorpay.key_secret="Fw1uPs6bltbgGV79CZwnp65o"
    ```
 3. Deploy: `firebase deploy --only functions` (requires Blaze plan)
 
