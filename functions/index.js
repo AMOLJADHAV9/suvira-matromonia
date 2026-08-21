@@ -89,7 +89,7 @@ exports.verifyRazorpayPaymentHttp = onRequest((req, res) => {
 
       if (expectedSignature === razorpay_signature) {
         // Payment verified successfully
-        
+
         // Now update the user's Firestore document
         const authHeader = req.headers.authorization || "";
         if (!authHeader.startsWith("Bearer ")) {
@@ -97,7 +97,7 @@ exports.verifyRazorpayPaymentHttp = onRequest((req, res) => {
           return res.status(401).json({ success: false, message: "Payment successful but failed to update profile (unauthorized)" });
         }
         const idToken = authHeader.split("Bearer ")[1];
-        
+
         let uid;
         try {
           const decodedToken = await admin.auth().verifyIdToken(idToken);
@@ -109,12 +109,12 @@ exports.verifyRazorpayPaymentHttp = onRequest((req, res) => {
 
         const packageIdToUse = req.body.packageId || 'unknown';
         const pkgConfig = PACKAGES[packageIdToUse] || { amount: 0, currency: "INR" };
-        
+
         // Calculate expiry date (assuming 12 months for remarriage, gold, nri and 6 months for platinum based on frontend code)
         // If we don't know exactly, default to 12 months.
         let validityMonths = 12;
         if (packageIdToUse === 'platinum') validityMonths = 6;
-        
+
         const expiryDate = new Date();
         expiryDate.setMonth(expiryDate.getMonth() + validityMonths);
 
