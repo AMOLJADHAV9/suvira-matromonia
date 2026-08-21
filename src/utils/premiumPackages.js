@@ -2,6 +2,8 @@
  * Premium package definitions (Remarriage, Platinum, Gold, NRI)
  * Matches design from package cards: validity, contacts/week, total contacts, price
  */
+
+// here is all about the package management and when you wnat update this all package then you will do change the those two file of index.js and this one current file  
 export const PREMIUM_PACKAGES = {
   remarriage: {
     id: 'remarriage',
