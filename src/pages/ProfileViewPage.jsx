@@ -184,6 +184,7 @@ const ProfileViewPage = () => {
     )
     if (res.success) {
       setInterest({ status: 'pending', senderId: currentUser.uid, receiverId: profile.id })
+      refreshUserProfile?.()
     } else {
       setInterestError(res.error)
     }

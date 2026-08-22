@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getUserProfile, logoutUser } from '../services/auth'
 import { deleteUserAccount as deleteAccountFn } from '../services/deleteAccount'
+import { getUserInterestStats, getIncomingInterests, getSentInterests, updateInterestStatus } from '../services/interests'
+import { getProfilePhotoUrl } from '../services/profiles'
 import DeleteAccountModal from '../components/ui/DeleteAccountModal'
 import { useOppositeGenderProfiles } from '../hooks/useOppositeGenderProfiles'
 import ProfileCompletionModal from '../components/profile/ProfileCompletionModal'
@@ -10,17 +12,97 @@ import ProfileCard from '../components/profile/ProfileCard'
 import Header from '../components/layout/Header'
 import Button from '../components/ui/Button'
 import GlassCard from '../components/ui/GlassCard'
-import { FaUser, FaSearch, FaHeart, FaCrown, FaEdit, FaCheckCircle, FaClock, FaTimesCircle, FaEye } from 'react-icons/fa'
+import { FaUser, FaSearch, FaHeart, FaCrown, FaEdit, FaCheckCircle, FaClock, FaTimesCircle, FaEye, FaCheck, FaTimes, FaComments } from 'react-icons/fa'
 import { PROFILE_STATUS } from '../utils/constants'
 
 const DashboardPage = () => {
   const navigate = useNavigate()
-  const { userProfile, currentUser, isPremiumUser, getProfileCompletion, setUserProfile, getActivePackage } = useAuth()
+  const { userProfile, currentUser, isPremiumUser, getProfileCompletion, setUserProfile, getActivePackage, refreshUserProfile } = useAuth()
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+  const [liveStats, setLiveStats] = useState(null)
+  const [incomingRequests, setIncomingRequests] = useState([])
+  const [matchesList, setMatchesList] = useState([])
+  const [actionLoadingId, setActionLoadingId] = useState(null)
+
+  const loadDashboardData = async () => {
+    if (!currentUser?.uid) return
+    try {
+      const [incRes, sntRes, stats] = await Promise.all([
+        getIncomingInterests(currentUser.uid),
+        getSentInterests(currentUser.uid),
+        getUserInterestStats(currentUser.uid)
+      ])
+
+      setLiveStats(stats)
+      refreshUserProfile?.()
+
+      const incData = incRes.success ? incRes.data : []
+      const sntData = sntRes.success ? sntRes.data : []
+
+      const pendingIncoming = incData.filter(i => i.status === 'pending')
+
+      const acceptedIncoming = incData.filter(i => i.status === 'accepted').map(i => ({ ...i, partnerId: i.senderId }))
+      const acceptedSent = sntData.filter(i => i.status === 'accepted').map(i => ({ ...i, partnerId: i.receiverId }))
+      const allAccepted = [...acceptedIncoming, ...acceptedSent]
+
+      const profileIdsToFetch = new Set([
+        ...pendingIncoming.map(i => i.senderId),
+        ...allAccepted.map(i => i.partnerId)
+      ])
+
+      const profilesMap = {}
+      await Promise.all(
+        Array.from(profileIdsToFetch).map(async (id) => {
+          const res = await getUserProfile(id)
+          if (res.success) {
+            profilesMap[id] = { id, ...res.data }
+          }
+        })
+      )
+
+      setIncomingRequests(
+        pendingIncoming.map(item => ({
+          ...item,
+          profile: profilesMap[item.senderId] || null
+        }))
+      )
+
+      setMatchesList(
+        allAccepted.map(item => ({
+          ...item,
+          profile: profilesMap[item.partnerId] || null
+        }))
+      )
+    } catch (err) {
+      console.error('Error loading dashboard data:', err)
+    }
+  }
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [currentUser?.uid])
+
+  const handleAcceptInterest = async (interestId) => {
+    setActionLoadingId(interestId)
+    const res = await updateInterestStatus(interestId, currentUser.uid, 'accepted')
+    if (res.success) {
+      await loadDashboardData()
+    }
+    setActionLoadingId(null)
+  }
+
+  const handleRejectInterest = async (interestId) => {
+    setActionLoadingId(interestId)
+    const res = await updateInterestStatus(interestId, currentUser.uid, 'rejected')
+    if (res.success) {
+      await loadDashboardData()
+    }
+    setActionLoadingId(null)
+  }
 
   const { profiles: suggestedMatches, loading: profilesLoading } = useOppositeGenderProfiles({
     userId: currentUser?.uid,
@@ -150,7 +232,7 @@ const DashboardPage = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Profile Views</p>
                 <p className="text-2xl font-bold text-primary-maroon">
-                  {userProfile?.stats?.profileViews || 0}
+                  {liveStats ? liveStats.profileViews : (userProfile?.stats?.profileViews || 0)}
                 </p>
               </div>
               <div className="p-3 bg-primary-maroon/10 rounded-full">
@@ -164,7 +246,7 @@ const DashboardPage = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Interests Received</p>
                 <p className="text-2xl font-bold text-primary-maroon">
-                  {userProfile?.stats?.interestsReceived || 0}
+                  {liveStats ? liveStats.interestsReceived : (userProfile?.stats?.interestsReceived || 0)}
                 </p>
               </div>
               <div className="p-3 bg-primary-maroon/10 rounded-full">
@@ -178,7 +260,7 @@ const DashboardPage = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Interests Sent</p>
                 <p className="text-2xl font-bold text-primary-maroon">
-                  {userProfile?.stats?.interestsSent || 0}
+                  {liveStats ? liveStats.interestsSent : (userProfile?.stats?.interestsSent || 0)}
                 </p>
               </div>
               <div className="p-3 bg-primary-gold/20 rounded-full">
@@ -192,7 +274,7 @@ const DashboardPage = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Matches</p>
                 <p className="text-2xl font-bold text-primary-maroon">
-                  {userProfile?.stats?.matches || 0}
+                  {liveStats ? liveStats.matches : (userProfile?.stats?.matches || 0)}
                 </p>
               </div>
               <div className="p-3 bg-primary-gold/20 rounded-full">
@@ -239,6 +321,195 @@ const DashboardPage = () => {
                 </div>
               </div>
             </GlassCard>
+          )}
+        </div>
+
+        {/* Incoming Requests Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-serif font-bold text-primary-maroon flex items-center gap-2">
+                <FaHeart className="text-primary-maroon" /> Incoming Requests
+              </h2>
+              <span className="bg-primary-maroon text-white text-xs px-2.5 py-0.5 rounded-full font-bold">
+                {incomingRequests.length}
+              </span>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => navigate('/interests')}>
+              View All in My Interests
+            </Button>
+          </div>
+
+          {incomingRequests.length === 0 ? (
+            <GlassCard className="p-6 text-center bg-white/60">
+              <p className="text-gray-500 font-medium">No pending incoming requests at the moment.</p>
+            </GlassCard>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {incomingRequests.map((item) => {
+                const profile = item.profile
+                const photoUrl = getProfilePhotoUrl(profile)
+                const isActioning = actionLoadingId === item.id
+
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-2xl p-5 border border-primary-gold/30 shadow-sm flex flex-col justify-between hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      <div
+                        className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-maroon/20 to-primary-gold/20 overflow-hidden flex-shrink-0 cursor-pointer"
+                        onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
+                      >
+                        {photoUrl ? (
+                          <img src={photoUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center font-serif text-xl font-bold text-primary-maroon">
+                            {profile?.personal?.name?.charAt(0) || '?'}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4
+                          className="font-serif font-bold text-primary-maroon text-lg truncate cursor-pointer hover:underline"
+                          onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
+                        >
+                          {profile?.personal?.name || 'Profile'}
+                        </h4>
+                        <p className="text-xs text-gray-600">
+                          {profile?.personal?.age ? `${profile.personal.age} yrs` : ''}
+                          {profile?.personal?.location ? ` • ${profile.personal.location}` : ''}
+                        </p>
+                        <span className="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                          Pending Request
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="flex-1"
+                        loading={isActioning}
+                        disabled={isActioning}
+                        onClick={() => handleAcceptInterest(item.id)}
+                        icon={<FaCheck />}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        disabled={isActioning}
+                        onClick={() => handleRejectInterest(item.id)}
+                        icon={<FaTimes />}
+                      >
+                        Reject
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
+                        icon={<FaEye />}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* My Matches Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-serif font-bold text-primary-maroon flex items-center gap-2">
+                <FaCheckCircle className="text-green-600" /> My Matches
+              </h2>
+              <span className="bg-green-700 text-white text-xs px-2.5 py-0.5 rounded-full font-bold">
+                {matchesList.length}
+              </span>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => navigate('/interests')}>
+              View All
+            </Button>
+          </div>
+
+          {matchesList.length === 0 ? (
+            <GlassCard className="p-6 text-center bg-white/60">
+              <p className="text-gray-500 font-medium mb-3">No accepted matches yet.</p>
+              <Button variant="primary" size="sm" onClick={() => navigate('/search')}>
+                Find Matches
+              </Button>
+            </GlassCard>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {matchesList.map((item) => {
+                const profile = item.profile
+                const photoUrl = getProfilePhotoUrl(profile)
+
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-2xl p-5 border border-green-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      <div
+                        className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-maroon/20 to-primary-gold/20 overflow-hidden flex-shrink-0 cursor-pointer"
+                        onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
+                      >
+                        {photoUrl ? (
+                          <img src={photoUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center font-serif text-xl font-bold text-primary-maroon">
+                            {profile?.personal?.name?.charAt(0) || '?'}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4
+                          className="font-serif font-bold text-primary-maroon text-lg truncate cursor-pointer hover:underline"
+                          onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
+                        >
+                          {profile?.personal?.name || 'Profile'}
+                        </h4>
+                        <p className="text-xs text-gray-600">
+                          {profile?.personal?.age ? `${profile.personal.age} yrs` : ''}
+                          {profile?.personal?.location ? ` • ${profile.personal.location}` : ''}
+                        </p>
+                        <span className="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-800 border border-green-200">
+                          Matched
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => profile?.id && navigate(`/chat/${profile.id}`)}
+                        icon={<FaComments />}
+                      >
+                        Message
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
+                        icon={<FaEye />}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
 

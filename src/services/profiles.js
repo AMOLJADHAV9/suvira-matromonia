@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, limit, doc, getDoc, orderBy, updateDoc, increment } from 'firebase/firestore'
+import { collection, query, where, getDocs, limit, doc, getDoc, orderBy, updateDoc, increment, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from './firebase'
 import { PROFILE_STATUS } from '../utils/constants'
 
@@ -434,10 +434,8 @@ export const getProfileById = async (targetUserId, currentUserId, currentUserGen
       return { success: false, error: 'Access denied' }
     }
 
-    // Increment profile views asynchronously (don't wait for it to finish)
-    updateDoc(docRef, {
-      'stats.profileViews': increment(1)
-    }).catch(err => console.error('Failed to increment profileViews:', err));
+    // Record profile view and increment stats
+    recordProfileView(targetUserId, currentUserId)
 
     const profile = { id: docSnap.id, ...data }
     log('Profile fetched successfully:', targetUserId)
@@ -483,5 +481,52 @@ export const fetchUserGenderFromFirestore = async (userId) => {
       success: false,
       error: error?.message || 'Failed to fetch user profile'
     }
+  }
+}
+
+/**
+ * Record a profile view in profile_views collection and update stats
+ */
+export const recordProfileView = async (targetUserId, viewerId) => {
+  if (!targetUserId || !viewerId || targetUserId === viewerId) return
+  try {
+    await addDoc(collection(db, 'profile_views'), {
+      viewedUserId: targetUserId,
+      viewerId: viewerId,
+      createdAt: serverTimestamp()
+    })
+    await updateDoc(doc(db, 'users', targetUserId), {
+      'stats.profileViews': increment(1)
+    })
+  } catch (err) {
+    console.error('Failed to record profile view:', err)
+  }
+}
+
+/**
+ * Get total profile views count for a user
+ */
+export const getProfileViewsCount = async (userId) => {
+  if (!userId) return 0
+  try {
+    const q = query(collection(db, 'profile_views'), where('viewedUserId', '==', userId))
+    const snap = await getDocs(q)
+    const countFromCollection = snap.size
+
+    const userDoc = await getDoc(doc(db, 'users', userId))
+    const countFromDoc = userDoc.exists() ? (userDoc.data()?.stats?.profileViews || 0) : 0
+
+    const totalViews = Math.max(countFromCollection, countFromDoc)
+
+    if (userDoc.exists() && userDoc.data()?.stats?.profileViews !== totalViews) {
+      updateDoc(doc(db, 'users', userId), {
+        'stats.profileViews': totalViews
+      }).catch(err => console.error('Failed to sync profileViews stat:', err))
+    }
+
+    return totalViews
+  } catch (err) {
+    console.error('Error fetching profile views count:', err)
+    return 0
   }
 }

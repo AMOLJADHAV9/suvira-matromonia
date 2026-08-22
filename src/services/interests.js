@@ -13,6 +13,7 @@ import {
   increment,
 } from 'firebase/firestore'
 import { db } from './firebase'
+import { getProfileViewsCount } from './profiles'
 
 const COLLECTION = 'interests'
 
@@ -229,3 +230,47 @@ export const getSentInterests = async (userId) => {
     return { success: false, data: [], error: err?.message }
   }
 }
+
+/**
+ * Calculate actual interest statistics (sent, received, matches) for a user and auto-sync with Firestore stats
+ */
+export const getUserInterestStats = async (userId) => {
+  if (!userId) return { interestsSent: 0, interestsReceived: 0, matches: 0, profileViews: 0 }
+
+  try {
+    const [inc, snt, profileViews] = await Promise.all([
+      getIncomingInterests(userId),
+      getSentInterests(userId),
+      getProfileViewsCount(userId)
+    ])
+
+    const sentCount = snt.success ? snt.data.length : 0
+    const receivedCount = inc.success ? inc.data.length : 0
+
+    const matchesCount = [
+      ...(inc.success ? inc.data.filter(i => i.status === 'accepted') : []),
+      ...(snt.success ? snt.data.filter(i => i.status === 'accepted') : [])
+    ].length
+
+    const stats = {
+      interestsSent: sentCount,
+      interestsReceived: receivedCount,
+      matches: matchesCount,
+      profileViews: profileViews
+    }
+
+    // Auto-sync stats to Firestore user document so profile stats remain consistent
+    updateDoc(doc(db, 'users', userId), {
+      'stats.interestsSent': sentCount,
+      'stats.interestsReceived': receivedCount,
+      'stats.matches': matchesCount,
+      'stats.profileViews': profileViews
+    }).catch(err => console.error('[Interests] Failed to sync stats:', err))
+
+    return stats
+  } catch (err) {
+    console.error('[Interests] getUserInterestStats error:', err)
+    return { interestsSent: 0, interestsReceived: 0, matches: 0, profileViews: 0 }
+  }
+}
+

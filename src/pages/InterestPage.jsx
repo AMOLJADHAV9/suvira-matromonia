@@ -97,7 +97,7 @@ const InterestCard = ({ interest, profile, type, onAccept, onReject, loading, is
 }
 
 const InterestPage = () => {
-  const { currentUser, isPremiumUser, isAdmin } = useAuth()
+  const { currentUser, isPremiumUser, isAdmin, refreshUserProfile } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('incoming')
   const [incoming, setIncoming] = useState([])
@@ -151,14 +151,20 @@ const InterestPage = () => {
   const handleAccept = async (interestId) => {
     setActionLoading(interestId)
     const res = await updateInterestStatus(interestId, currentUser.uid, 'accepted')
-    if (res.success) await loadInterests()
+    if (res.success) {
+      await loadInterests()
+      refreshUserProfile?.()
+    }
     setActionLoading(null)
   }
 
   const handleReject = async (interestId) => {
     setActionLoading(interestId)
     const res = await updateInterestStatus(interestId, currentUser.uid, 'rejected')
-    if (res.success) await loadInterests()
+    if (res.success) {
+      await loadInterests()
+      refreshUserProfile?.()
+    }
     setActionLoading(null)
   }
 
