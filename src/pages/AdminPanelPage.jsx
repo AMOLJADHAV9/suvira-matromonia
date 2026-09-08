@@ -7,6 +7,7 @@ import AdminProfiles from './admin/AdminProfiles'
 import AdminInterests from './admin/AdminInterests'
 import AdminReports from './admin/AdminReports'
 import AdminPremium from './admin/AdminPremium'
+import AdminSettings from './admin/AdminSettings'
 
 const AdminPanelPage = () => (
   <AdminLayout>
@@ -18,6 +19,7 @@ const AdminPanelPage = () => (
       <Route path="interests" element={<AdminInterests />} />
       <Route path="reports" element={<AdminReports />} />
       <Route path="premium" element={<AdminPremium />} />
+      <Route path="settings" element={<AdminSettings />} />
       <Route path="*" element={<AdminDashboard />} />
     </Routes>
   </AdminLayout>

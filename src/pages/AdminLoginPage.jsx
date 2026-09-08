@@ -24,11 +24,6 @@ const AdminLoginPage = () => {
           </div>
           <AdminLoginForm />
         </div>
-        <p className="text-center text-white/70 text-sm mt-6">
-          <Link to="/admin/register" className="hover:text-white underline">
-            Create admin account
-          </Link>
-        </p>
       </div>
     </div>
   )

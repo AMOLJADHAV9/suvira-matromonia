@@ -5,6 +5,7 @@ import Button from '../ui/Button'
 import { loginUser, resetPassword } from '../../services/auth'
 import { validateField } from '../../utils/validation'
 import { useAuth } from '../../context/AuthContext'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 
 const LoginForm = () => {
   const navigate = useNavigate()
@@ -19,6 +20,7 @@ const LoginForm = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
   const [resetSuccess, setResetSuccess] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const setField = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -185,11 +187,21 @@ const LoginForm = () => {
               <Input
                 label="Password"
                 required
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={form.password}
                 onChange={(e) => setField('password', e.target.value)}
                 error={errors.password}
                 placeholder="Enter your password"
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-400 hover:text-gray-700 p-1 cursor-pointer focus:outline-none"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <FaEyeSlash className="text-base" /> : <FaEye className="text-base" />}
+                  </button>
+                }
               />
               <button
                 type="button"

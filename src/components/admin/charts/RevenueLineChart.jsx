@@ -1,42 +1,43 @@
 import React from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
-const MAROON = '#7C2D3A'
-const GOLD_LIGHT = 'rgba(212, 175, 55, 0.3)'
+const MAROON = '#881337'
 
 const RevenueLineChart = ({ data = [] }) => {
-  if (!data.length) {
-    return (
-      <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
-        No revenue data available
-      </div>
-    )
-  }
+  const sampleData = [
+    { label: 'Apr 2026', revenue: 0 },
+    { label: 'May 2026', revenue: 0 },
+    { label: 'Jun 2026', revenue: 0 },
+    { label: 'Jul 2026', revenue: 0 },
+    { label: 'Aug 2026', revenue: 0 },
+    { label: 'Sept 2026', revenue: 0 },
+  ]
 
-  const formatCurrency = (v) => `₹${Number(v).toLocaleString('en-IN')}`
+  const chartData = data && data.length > 0 ? data : sampleData
+  const formatCurrency = (v) => (v >= 1000 ? `₹${v / 1000}k` : `₹${v}`)
 
   return (
-    <ResponsiveContainer width="100%" height={280}>
-      <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height={220}>
+      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
         <defs>
-          <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={MAROON} stopOpacity={0.4} />
-            <stop offset="95%" stopColor={GOLD_LIGHT} stopOpacity={0.1} />
+          <linearGradient id="revenueAreaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={MAROON} stopOpacity={0.25} />
+            <stop offset="95%" stopColor={MAROON} stopOpacity={0.0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-        <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="#6b7280" />
-        <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" tickFormatter={formatCurrency} />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+        <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#6B7280' }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 11, fill: '#6B7280' }} axisLine={false} tickLine={false} tickFormatter={formatCurrency} domain={[0, 'auto']} />
         <Tooltip
-          formatter={(value) => [formatCurrency(value), 'Revenue']}
-          contentStyle={{ borderRadius: 8 }}
+          formatter={(value) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Revenue']}
+          contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #F3F4F6', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
         />
         <Area
           type="monotone"
           dataKey="revenue"
           stroke={MAROON}
-          strokeWidth={2}
-          fill="url(#revenueGradient)"
+          strokeWidth={2.5}
+          fill="url(#revenueAreaGradient)"
           name="Revenue"
         />
       </AreaChart>
@@ -45,3 +46,4 @@ const RevenueLineChart = ({ data = [] }) => {
 }
 
 export default RevenueLineChart
+

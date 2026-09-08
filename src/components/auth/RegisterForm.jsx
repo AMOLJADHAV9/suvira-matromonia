@@ -4,6 +4,7 @@ import Button from '../ui/Button'
 import { registerUser } from '../../services/auth'
 import { validateField } from '../../utils/validation'
 import { RELIGIONS, CASTES, MAHARASHTRA_CITIES } from '../../utils/profileConstants'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 
 const initialForm = {
   name: '',
@@ -54,6 +55,8 @@ const RegisterForm = ({ onSuccess }) => {
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
   const [serverSuccess, setServerSuccess] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const genderOptions = useMemo(
     () => [
@@ -240,20 +243,40 @@ const RegisterForm = ({ onSuccess }) => {
         <Input
           label="Password"
           required
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           value={form.password}
           onChange={(e) => setField('password', e.target.value)}
           error={errors.password}
           placeholder="Create a strong password"
+          rightElement={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-gray-400 hover:text-gray-700 p-1 cursor-pointer focus:outline-none"
+              title={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <FaEyeSlash className="text-base" /> : <FaEye className="text-base" />}
+            </button>
+          }
         />
         <Input
           label="Confirm password"
           required
-          type="password"
+          type={showConfirmPassword ? 'text' : 'password'}
           value={form.confirmPassword}
           onChange={(e) => setField('confirmPassword', e.target.value)}
           error={errors.confirmPassword}
           placeholder="Re-enter password"
+          rightElement={
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="text-gray-400 hover:text-gray-700 p-1 cursor-pointer focus:outline-none"
+              title={showConfirmPassword ? 'Hide password' : 'Show password'}
+            >
+              {showConfirmPassword ? <FaEyeSlash className="text-base" /> : <FaEye className="text-base" />}
+            </button>
+          }
         />
       </div>
 

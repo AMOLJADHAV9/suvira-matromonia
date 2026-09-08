@@ -4,6 +4,7 @@ import Input from '../ui/Input'
 import Button from '../ui/Button'
 import { registerAdminUser } from '../../services/auth'
 import { validateField } from '../../utils/validation'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 
 const AdminRegisterForm = () => {
   const navigate = useNavigate()
@@ -17,6 +18,8 @@ const AdminRegisterForm = () => {
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const setField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -98,20 +101,40 @@ const AdminRegisterForm = () => {
       <Input
         label="Password"
         required
-        type="password"
+        type={showPassword ? 'text' : 'password'}
         value={form.password}
         onChange={(e) => setField('password', e.target.value)}
         error={errors.password}
         placeholder="Create a strong password"
+        rightElement={
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="text-gray-400 hover:text-gray-700 p-1 cursor-pointer focus:outline-none"
+            title={showPassword ? 'Hide password' : 'Show password'}
+          >
+            {showPassword ? <FaEyeSlash className="text-base" /> : <FaEye className="text-base" />}
+          </button>
+        }
       />
       <Input
         label="Confirm Password"
         required
-        type="password"
+        type={showConfirmPassword ? 'text' : 'password'}
         value={form.confirmPassword}
         onChange={(e) => setField('confirmPassword', e.target.value)}
         error={errors.confirmPassword}
         placeholder="Re-enter password"
+        rightElement={
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="text-gray-400 hover:text-gray-700 p-1 cursor-pointer focus:outline-none"
+            title={showConfirmPassword ? 'Hide password' : 'Show password'}
+          >
+            {showConfirmPassword ? <FaEyeSlash className="text-base" /> : <FaEye className="text-base" />}
+          </button>
+        }
       />
       {serverError && (
         <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">

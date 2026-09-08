@@ -7,11 +7,13 @@ import hero6 from './images/istockphoto-2168707868-612x612.jpg'
 import angathiRasam from './images/angathi rasam.jpeg'
 import southWedding from './images/south wedding.jpg'
 import cornerFlower from './images/corner-floower-removebg-preview.png'
+import heroNewCouple from './images/ChatGPT Image Sep 3, 2026, 10_53_22 PM.png'
 
-export const weddingImages = [hero1, hero2, hero3, hero4, hero5, hero6]
+export const weddingImages = [heroNewCouple, hero1, hero2, hero3, hero4, hero5, hero6]
 export const cornerFlowerImage = cornerFlower
-export const heroBannerImages = weddingImages.slice(0, 4)
+export const heroBannerImages = [heroNewCouple, ...weddingImages.slice(0, 3)]
+export const heroNewCoupleImage = heroNewCouple
 // Our Wedding Moments: feature angathi rasam & south wedding first, then rest
 export const galleryImages = [angathiRasam, southWedding, ...weddingImages]
-export const secondBannerImage = angathiRasam
-export const weddingMomentsFeatured = [angathiRasam, southWedding]
+export const ritualImage1 = hero5
+export const ritualImage2 = hero6

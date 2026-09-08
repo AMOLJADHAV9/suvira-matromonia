@@ -509,24 +509,26 @@ export const recordProfileView = async (targetUserId, viewerId) => {
 export const getProfileViewsCount = async (userId) => {
   if (!userId) return 0
   try {
-    const q = query(collection(db, 'profile_views'), where('viewedUserId', '==', userId))
-    const snap = await getDocs(q)
-    const countFromCollection = snap.size
-
     const userDoc = await getDoc(doc(db, 'users', userId))
     const countFromDoc = userDoc.exists() ? (userDoc.data()?.stats?.profileViews || 0) : 0
 
-    const totalViews = Math.max(countFromCollection, countFromDoc)
+    try {
+      const q = query(collection(db, 'profile_views'), where('viewedUserId', '==', userId))
+      const snap = await getDocs(q)
+      const countFromCollection = snap.size
+      const totalViews = Math.max(countFromCollection, countFromDoc)
 
-    if (userDoc.exists() && userDoc.data()?.stats?.profileViews !== totalViews) {
-      updateDoc(doc(db, 'users', userId), {
-        'stats.profileViews': totalViews
-      }).catch(err => console.error('Failed to sync profileViews stat:', err))
+      if (userDoc.exists() && userDoc.data()?.stats?.profileViews !== totalViews) {
+        updateDoc(doc(db, 'users', userId), {
+          'stats.profileViews': totalViews
+        }).catch(() => {})
+      }
+      return totalViews
+    } catch (permErr) {
+      // Permission boundary: Return profileViews stored directly on user document
+      return countFromDoc
     }
-
-    return totalViews
   } catch (err) {
-    console.error('Error fetching profile views count:', err)
     return 0
   }
 }

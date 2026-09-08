@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
+import { uploadProfilePhoto, updateUserProfile } from '../services/auth'
 import {
     getProfilePhotoUrl,
     getProfileEducation,
@@ -29,6 +30,9 @@ import {
     FaCrown,
     FaClock,
     FaTimesCircle,
+    FaCamera,
+    FaTimes,
+    FaUpload,
 } from 'react-icons/fa'
 
 // ─── Reusable primitives (same premium aesthetic as ProfileViewPage) ──────────
@@ -96,9 +100,91 @@ const itemVariants = {
 
 const MyProfilePage = () => {
     const navigate = useNavigate()
-    const { userProfile, currentUser, getProfileCompletion } = useAuth()
+    const { userProfile, currentUser, getProfileCompletion, isPremiumUser, getActivePackage, refreshUserProfile } = useAuth()
     const [photoIndex, setPhotoIndex] = useState(0)
     const [showGallery, setShowGallery] = useState(false)
+
+    // Edit Photo Modal State
+    const [showEditPhotoModal, setShowEditPhotoModal] = useState(false)
+    const [photoFile, setPhotoFile] = useState(null)
+    const [photoPreview, setPhotoPreview] = useState(null)
+    const [uploadingPhoto, setUploadingPhoto] = useState(false)
+    const [photoProgress, setPhotoProgress] = useState(0)
+    const [photoError, setPhotoError] = useState(null)
+    const [photoSuccess, setPhotoSuccess] = useState(null)
+
+    const handlePhotoFileChange = (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        setPhotoError(null)
+        setPhotoSuccess(null)
+        if (!file.type.startsWith('image/')) {
+            setPhotoError('Please select a valid image file.')
+            return
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setPhotoError('Image size should be less than 5MB.')
+            return
+        }
+        setPhotoFile(file)
+        setPhotoPreview(URL.createObjectURL(file))
+    }
+
+    const handleSavePhoto = async () => {
+        if (!photoFile || !currentUser?.uid) return
+        setUploadingPhoto(true)
+        setPhotoError(null)
+        setPhotoSuccess(null)
+        setPhotoProgress(0)
+
+        try {
+            const uploadRes = await uploadProfilePhoto(currentUser.uid, photoFile, (progress) => {
+                setPhotoProgress(progress)
+            })
+
+            if (!uploadRes.success || !uploadRes.url) {
+                setPhotoError(uploadRes.error || 'Failed to upload photo.')
+                setUploadingPhoto(false)
+                return
+            }
+
+            const newUrl = uploadRes.url
+            const existingPhotos = profile.photos || profile.profile?.lifestyleHabits?.additionalPhotos || []
+            const updatedPhotos = [newUrl, ...existingPhotos.filter(p => p !== newUrl)]
+
+            const updateRes = await updateUserProfile(currentUser.uid, {
+                profilePhotoUrl: newUrl,
+                photos: updatedPhotos,
+                profile: {
+                    ...(userProfile.profile || {}),
+                    lifestyleHabits: {
+                        ...(userProfile.profile?.lifestyleHabits || {}),
+                        profilePhotoUrl: newUrl,
+                        additionalPhotos: updatedPhotos,
+                    }
+                }
+            })
+
+            if (updateRes.success) {
+                setPhotoSuccess('Profile photo updated successfully!')
+                await refreshUserProfile?.()
+                setTimeout(() => {
+                    setShowEditPhotoModal(false)
+                    setPhotoFile(null)
+                    setPhotoPreview(null)
+                    setPhotoSuccess(null)
+                    setUploadingPhoto(false)
+                }, 1200)
+            } else {
+                setPhotoError(updateRes.error || 'Failed to update profile.')
+                setUploadingPhoto(false)
+            }
+        } catch (err) {
+            console.error('Photo save error:', err)
+            setPhotoError(err.message || 'An error occurred.')
+            setUploadingPhoto(false)
+        }
+    }
 
     if (!userProfile) {
         return (
@@ -110,6 +196,8 @@ const MyProfilePage = () => {
 
     // Build a profile-shaped object from userProfile so we can reuse helpers
     const profile = { id: currentUser?.uid, ...userProfile }
+    const isUserPremium = (isPremiumUser && isPremiumUser()) || profile.isPremium === true || profile.role === 'premium_user' || profile.subscription?.isActive === true
+    const activePackage = getActivePackage ? getActivePackage() : null
 
     const photos = getProfilePhotos(profile)
     const photoUrl = getProfilePhotoUrl(profile)
@@ -223,6 +311,19 @@ const MyProfilePage = () => {
                                         </div>
                                     )}
 
+                                    {/* Edit Photo Overlay Button */}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setShowEditPhotoModal(true)
+                                        }}
+                                        className="absolute bottom-5 left-5 bg-black/65 hover:bg-black/85 text-white px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 backdrop-blur-md transition-all border border-white/20 shadow-lg group/btn z-10"
+                                    >
+                                        <FaCamera className="text-primary-gold text-sm group-hover/btn:scale-110 transition-transform" />
+                                        <span>Edit Photo</span>
+                                    </button>
+
                                     {/* Photo dots + count */}
                                     {photos.length > 1 && (
                                         <>
@@ -282,9 +383,10 @@ const MyProfilePage = () => {
                                         {/* Status badges row */}
                                         <div className="flex flex-wrap items-center gap-3 mb-4">
                                             <StatusBadge />
-                                            {profile.isPremium && (
-                                                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-sm font-semibold border border-amber-200">
-                                                    <FaCrown className="text-primary-gold" /> Premium
+                                            {isUserPremium && (
+                                                <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 text-amber-800 text-xs font-bold border border-amber-300 shadow-2xs">
+                                                    <FaCrown className="text-primary-gold" />
+                                                    {activePackage?.name ? `${activePackage.name.replace(' Package', '')} Member` : 'Premium Member'}
                                                 </span>
                                             )}
                                             {currentUser?.emailVerified && (
@@ -330,10 +432,14 @@ const MyProfilePage = () => {
                                             variant="outline"
                                             size="lg"
                                             onClick={() => navigate('/subscription')}
-                                            icon={<FaCrown />}
-                                            className="border-primary-gold/40 text-primary-maroon hover:bg-primary-cream"
+                                            icon={<FaCrown className={isUserPremium ? "text-primary-gold" : ""} />}
+                                            className={
+                                                isUserPremium
+                                                    ? "border-primary-gold/60 bg-amber-50/50 text-primary-maroon hover:bg-amber-100/50 font-semibold"
+                                                    : "border-primary-gold/40 text-primary-maroon hover:bg-primary-cream"
+                                            }
                                         >
-                                            Subscription
+                                            {isUserPremium ? 'Manage Subscription' : 'Subscription'}
                                         </Button>
                                     </div>
                                 </div>
@@ -506,6 +612,119 @@ const MyProfilePage = () => {
                             >
                                 ✕
                             </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── Edit Photo Modal ── */}
+            <AnimatePresence>
+                {showEditPhotoModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+                        onClick={() => !uploadingPhoto && setShowEditPhotoModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="bg-white rounded-3xl p-6 lg:p-8 max-w-md w-full shadow-2xl border border-primary-gold/30 relative overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-primary-cream flex items-center justify-center text-primary-maroon border border-primary-gold/30">
+                                        <FaCamera className="text-lg" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-serif font-bold text-primary-maroon">
+                                            Edit Profile Photo
+                                        </h3>
+                                        <p className="text-xs text-gray-500">Upload a clear photo for your profile</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => !uploadingPhoto && setShowEditPhotoModal(false)}
+                                    className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                                    disabled={uploadingPhoto}
+                                >
+                                    <FaTimes className="text-lg" />
+                                </button>
+                            </div>
+
+                            {photoError && (
+                                <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-xs font-medium border border-red-200">
+                                    {photoError}
+                                </div>
+                            )}
+
+                            {photoSuccess && (
+                                <div className="mb-4 p-3 rounded-xl bg-green-50 text-green-700 text-xs font-medium border border-green-200">
+                                    {photoSuccess}
+                                </div>
+                            )}
+
+                            {/* Current / Selected Image Preview */}
+                            <div className="mb-6 flex flex-col items-center">
+                                <div className="w-44 h-44 rounded-2xl overflow-hidden border-2 border-primary-gold/40 shadow-md relative bg-primary-cream/40 flex items-center justify-center group">
+                                    {photoPreview || photoUrl ? (
+                                        <img
+                                            src={photoPreview || (photos[photoIndex] || photoUrl)}
+                                            alt="Profile Preview"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-primary-maroon/40 text-6xl font-serif">
+                                            {personal.name?.charAt(0) || '?'}
+                                        </span>
+                                    )}
+                                    {uploadingPhoto && (
+                                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white p-4 backdrop-blur-xs">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent mb-2" />
+                                            <span className="text-xs font-bold">{photoProgress}%</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-xs text-gray-400 mt-2 text-center">
+                                    Supports JPG, PNG, WEBP (Max 5MB)
+                                </p>
+                            </div>
+
+                            {/* Upload Controls */}
+                            <div className="space-y-4">
+                                <label className="block">
+                                    <span className="sr-only">Choose profile photo</span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handlePhotoFileChange}
+                                        disabled={uploadingPhoto}
+                                        className="block w-full text-sm text-gray-500
+                                          file:mr-4 file:py-2.5 file:px-4
+                                          file:rounded-full file:border-0
+                                          file:text-xs file:font-semibold
+                                          file:bg-primary-cream file:text-primary-maroon
+                                          hover:file:bg-primary-gold/20
+                                          cursor-pointer transition-colors"
+                                    />
+                                </label>
+
+                                {photoFile && (
+                                    <Button
+                                        variant="primary"
+                                        className="w-full rounded-full py-3 bg-gradient-to-r from-primary-maroon to-primary-gold text-white font-semibold shadow-md"
+                                        onClick={handleSavePhoto}
+                                        loading={uploadingPhoto}
+                                        disabled={uploadingPhoto}
+                                        icon={<FaUpload />}
+                                    >
+                                        {uploadingPhoto ? `Uploading (${photoProgress}%)` : 'Save Profile Photo'}
+                                    </Button>
+                                )}
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}

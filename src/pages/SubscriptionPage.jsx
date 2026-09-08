@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { FaCrown } from 'react-icons/fa'
 import Header from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
 import Button from '../components/ui/Button'
@@ -10,8 +11,10 @@ import { createOrder, openRazorpayCheckout, verifyPayment } from '../services/pa
 
 const SubscriptionPage = () => {
   const navigate = useNavigate()
-  const { currentUser, refreshUserProfile } = useAuth()
+  const { currentUser, userProfile, isPremiumUser, getActivePackage, refreshUserProfile } = useAuth()
   const packages = getAllPackages()
+  const isUserPremium = isPremiumUser ? isPremiumUser() : false
+  const activePackage = getActivePackage ? getActivePackage() : null
   const [loadingPackageId, setLoadingPackageId] = useState(null)
   const [paymentError, setPaymentError] = useState(null)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
@@ -65,6 +68,29 @@ const SubscriptionPage = () => {
             Purchase a plan to view profiles, send interest, see contact details, and chat with matches.
           </p>
 
+          {isUserPremium && (
+            <div className="mb-10 p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border border-amber-300/80 shadow-sm max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4 text-left">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center text-xl shadow-md shrink-0">
+                  <FaCrown />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-amber-950 flex items-center gap-2">
+                    Active Subscription: {activePackage?.name || 'Premium Member'}
+                  </h3>
+                  <p className="text-sm text-amber-900/80">
+                    {userProfile?.subscription?.expiryDate
+                      ? `Valid until ${userProfile.subscription.expiryDate.toDate ? userProfile.subscription.expiryDate.toDate().toLocaleDateString() : new Date(userProfile.subscription.expiryDate).toLocaleDateString()}`
+                      : 'You currently have active premium access.'}
+                  </p>
+                </div>
+              </div>
+              <span className="px-4 py-1.5 rounded-full bg-amber-600 text-white text-xs font-bold uppercase tracking-wider shadow-xs shrink-0">
+                Active Plan
+              </span>
+            </div>
+          )}
+
           {paymentSuccess && (
             <div className="mb-6 p-4 rounded-xl bg-green-50 text-green-800 text-center font-medium">
               Payment successful. Your plan is now active.
@@ -77,64 +103,76 @@ const SubscriptionPage = () => {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {packages.map((pkg, index) => (
-              <motion.div
-                key={pkg.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl overflow-hidden border border-primary-gold/20 shadow-lg hover:shadow-xl transition-shadow"
-              >
-                <div
-                  className="px-6 py-4 text-center font-bold uppercase tracking-wide"
-                  style={{
-                    backgroundColor: pkg.headerColor || '#800020',
-                    color: pkg.headerColor === '#D4AF37' ? '#1F1F1F' : 'white',
-                  }}
+            {packages.map((pkg, index) => {
+              const isCurrent = activePackage?.id === pkg.id || (isUserPremium && index === 0 && !activePackage?.id)
+              return (
+                <motion.div
+                  key={pkg.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`bg-white rounded-2xl overflow-hidden border transition-all duration-300 relative ${
+                    isCurrent
+                      ? 'border-amber-400 shadow-xl ring-2 ring-amber-400/50 scale-[1.02]'
+                      : 'border-primary-gold/20 shadow-lg hover:shadow-xl'
+                  }`}
                 >
-                  {pkg.name.replace(' Package', '')}
-                </div>
-                <div className="p-6 space-y-6">
-                  <div>
-                    <p className="text-2xl font-bold text-primary-maroon">
-                      {pkg.validityMonths} MONTHS
-                    </p>
-                    <p className="text-sm text-gray-500">Months Validity</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-primary-maroon">
-                      {pkg.contactsPerWeek}
-                    </p>
-                    <p className="text-sm text-gray-500">Contact per week</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-primary-maroon">
-                      {pkg.totalContacts}
-                    </p>
-                    <p className="text-sm text-gray-500">Total Profile contact</p>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ₹{pkg.price}/-
-                  </p>
-                  <Button
-                    variant="primary"
-                    className="w-full rounded-full py-3 font-semibold"
+                  {isCurrent && (
+                    <div className="bg-amber-500 text-white text-xs font-bold text-center py-1 uppercase tracking-wider">
+                      Current Active Plan
+                    </div>
+                  )}
+                  <div
+                    className="px-6 py-4 text-center font-bold uppercase tracking-wide"
                     style={{
-                      background: pkg.headerColor === '#D4AF37'
-                        ? 'linear-gradient(to right, #D4AF37, #e8c547)'
-                        : 'linear-gradient(to right, #800020, #a00028)',
+                      backgroundColor: pkg.headerColor || '#800020',
                       color: pkg.headerColor === '#D4AF37' ? '#1F1F1F' : 'white',
-                      border: 'none',
                     }}
-                    onClick={() => handlePayNow(pkg)}
-                    disabled={!!loadingPackageId}
-                    loading={loadingPackageId === pkg.id}
                   >
-                    {loadingPackageId === pkg.id ? 'Processing...' : 'Pay Now'}
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
+                    {pkg.name.replace(' Package', '')}
+                  </div>
+                  <div className="p-6 space-y-6">
+                    <div>
+                      <p className="text-2xl font-bold text-primary-maroon">
+                        {pkg.validityMonths} MONTHS
+                      </p>
+                      <p className="text-sm text-gray-500">Months Validity</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-primary-maroon">
+                        {pkg.contactsPerWeek}
+                      </p>
+                      <p className="text-sm text-gray-500">Contact per week</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-primary-maroon">
+                        {pkg.totalContacts}
+                      </p>
+                      <p className="text-sm text-gray-500">Total Profile contact</p>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">
+                      ₹{pkg.price}/-
+                    </p>
+                    <Button
+                      variant="primary"
+                      className="w-full rounded-full py-3 font-semibold"
+                      style={{
+                        background: pkg.headerColor === '#D4AF37'
+                          ? 'linear-gradient(to right, #D4AF37, #e8c547)'
+                          : 'linear-gradient(to right, #800020, #a00028)',
+                        color: pkg.headerColor === '#D4AF37' ? '#1F1F1F' : 'white',
+                        border: 'none',
+                      }}
+                      onClick={() => handlePayNow(pkg)}
+                      disabled={!!loadingPackageId}
+                      loading={loadingPackageId === pkg.id}
+                    >
+                      {loadingPackageId === pkg.id ? 'Processing...' : isCurrent ? 'Renew Plan' : 'Pay Now'}
+                    </Button>
+                  </div>
+                </motion.div>
+              )
+            })}
           </div>
 
           <p className="text-center text-gray-500 text-sm mt-8">

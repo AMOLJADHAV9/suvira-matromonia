@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { onAuthStateChange, getUserProfile } from '../services/auth'
+import { onAuthStateChange, getUserProfile, logoutUser } from '../services/auth'
 import { getPackageById } from '../utils/premiumPackages'
 
 const AuthContext = createContext()
@@ -59,11 +59,16 @@ export const AuthProvider = ({ children }) => {
   }
 
   const isPremiumUser = () => {
-    return isRole('premium_user')
+    if (!userProfile) return false
+    return (
+      userProfile.role === 'premium_user' ||
+      userProfile.isPremium === true ||
+      hasActiveSubscription()
+    )
   }
 
   const isFreeUser = () => {
-    return isRole('free_user')
+    return isRole('free_user') && !isPremiumUser()
   }
 
   // Check profile status
@@ -81,9 +86,12 @@ export const AuthProvider = ({ children }) => {
 
   // Check subscription status (not expired, has valid expiry)
   const hasActiveSubscription = () => {
-    if (!userProfile?.subscription) return false
+    if (!userProfile) return false
+    if (userProfile.role === 'premium_user' || userProfile.isPremium === true) return true
+    if (!userProfile.subscription) return false
     const { isActive, expiryDate } = userProfile.subscription
     if (isActive === false) return false
+    if (!expiryDate) return true
     const exp = expiryDate?.toDate?.() || expiryDate
     return exp && new Date(exp) > new Date()
   }
@@ -179,7 +187,9 @@ export const AuthProvider = ({ children }) => {
     updateProfile,
     refreshUserProfile,
     setCurrentUser,
-    setUserProfile
+    setUserProfile,
+    logout: logoutUser,
+    logoutUser
   }
 
   return (

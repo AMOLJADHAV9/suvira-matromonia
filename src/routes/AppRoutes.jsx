@@ -285,6 +285,22 @@ const AppRoutes = () => {
             </AdminAuthRoute>
           }
         />
+        <Route
+          path="/accountcreate/admin"
+          element={
+            <AdminAuthRoute>
+              <AdminRegisterPage />
+            </AdminAuthRoute>
+          }
+        />
+        <Route
+          path="/accountcreate/admin/"
+          element={
+            <AdminAuthRoute>
+              <AdminRegisterPage />
+            </AdminAuthRoute>
+          }
+        />
         {/* Admin Panel */}
         <Route
           path="/admin"

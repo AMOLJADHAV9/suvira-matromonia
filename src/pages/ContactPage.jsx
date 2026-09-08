@@ -65,25 +65,25 @@ const ContactPage = () => {
     {
       icon: <FaEnvelope className="text-2xl text-primary-gold" />,
       title: 'Email',
-      content: 'support@suviramatrimony.com',
-      link: 'mailto:support@suviramatrimony.com'
+      content: 'suviramatrimonial@gmail.com',
+      link: 'mailto:suviramatrimonial@gmail.com'
     },
     {
       icon: <FaPhone className="text-2xl text-primary-gold" />,
       title: 'Phone',
-      content: '+91 1800-XXX-XXXX',
-      link: 'tel:+911800XXXXXX'
+      content: '+91 9552415513',
+      link: 'tel:+919552415513'
     },
     {
       icon: <FaMapMarkerAlt className="text-2xl text-primary-gold" />,
       title: 'Address',
-      content: 'Mumbai, Maharashtra, India',
+      content: 'Bharat Society Shop No. 4, Latur, Maharashtra, India',
       link: null
     },
     {
       icon: <FaClock className="text-2xl text-primary-gold" />,
-      title: 'Business Hours',
-      content: 'Mon - Sat: 9:00 AM - 8:00 PM',
+      title: 'Customer Support',
+      content: '24/7 Customer Support',
       link: null
     }
   ]
@@ -235,7 +235,7 @@ const ContactPage = () => {
                 <p className="text-gray-700 mb-4">
                   Our customer support team is available 24/7 to assist you with any queries or concerns.
                 </p>
-                <Button variant="outline" onClick={() => window.open('mailto:support@suviramatrimony.com')}>
+                <Button variant="outline" onClick={() => window.open('mailto:suviramatrimonial@gmail.com')}>
                   <FaEnvelope className="mr-2" />
                   Email Support
                 </Button>

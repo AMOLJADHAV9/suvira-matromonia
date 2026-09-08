@@ -10,6 +10,7 @@ const Input = forwardRef(({
   required = false,
   disabled = false,
   icon,
+  rightElement,
   ...props 
 }, ref) => {
   const baseClasses = 'w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-300'
@@ -37,11 +38,17 @@ const Input = forwardRef(({
         <motion.input
           ref={ref}
           type={type}
-          className={`${combinedClasses} ${icon ? 'pl-10' : ''}`}
+          className={`${combinedClasses} ${icon ? 'pl-10' : ''} ${rightElement ? 'pr-12' : ''}`}
           disabled={disabled}
-          whileFocus={{ scale: 1.02 }}
+          whileFocus={{ scale: 1.01 }}
           {...props}
         />
+
+        {rightElement && (
+          <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center z-10">
+            {rightElement}
+          </div>
+        )}
       </div>
       
       {error && (

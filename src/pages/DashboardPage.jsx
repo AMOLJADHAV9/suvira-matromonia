@@ -6,13 +6,33 @@ import { deleteUserAccount as deleteAccountFn } from '../services/deleteAccount'
 import { getUserInterestStats, getIncomingInterests, getSentInterests, updateInterestStatus } from '../services/interests'
 import { getProfilePhotoUrl } from '../services/profiles'
 import DeleteAccountModal from '../components/ui/DeleteAccountModal'
-import { useOppositeGenderProfiles } from '../hooks/useOppositeGenderProfiles'
 import ProfileCompletionModal from '../components/profile/ProfileCompletionModal'
-import ProfileCard from '../components/profile/ProfileCard'
 import Header from '../components/layout/Header'
-import Button from '../components/ui/Button'
-import GlassCard from '../components/ui/GlassCard'
-import { FaUser, FaSearch, FaHeart, FaCrown, FaEdit, FaCheckCircle, FaClock, FaTimesCircle, FaEye, FaCheck, FaTimes, FaComments } from 'react-icons/fa'
+import Footer from '../components/layout/Footer'
+import { 
+  FaUser, 
+  FaSearch, 
+  FaHeart, 
+  FaCrown, 
+  FaEdit, 
+  FaCheckCircle, 
+  FaClock, 
+  FaTimesCircle, 
+  FaEye, 
+  FaComments,
+  FaPaperPlane,
+  FaUsers,
+  FaStar,
+  FaBan,
+  FaCog,
+  FaQuestionCircle,
+  FaArrowRight,
+  FaShieldAlt,
+  FaTrashAlt,
+  FaUserFriends
+} from 'react-icons/fa'
+import stylishCouple from '../assets/real-matech-story/stylish-indian-hindu-couple-posed-street_627829-12969.avif'
+import { cornerFlowerImage } from '../assets/wedding'
 import { PROFILE_STATUS } from '../utils/constants'
 
 const DashboardPage = () => {
@@ -27,6 +47,7 @@ const DashboardPage = () => {
   const [incomingRequests, setIncomingRequests] = useState([])
   const [matchesList, setMatchesList] = useState([])
   const [actionLoadingId, setActionLoadingId] = useState(null)
+  const [activeTab, setActiveTab] = useState('dashboard')
 
   const loadDashboardData = async () => {
     if (!currentUser?.uid) return
@@ -104,26 +125,14 @@ const DashboardPage = () => {
     setActionLoadingId(null)
   }
 
-  const { profiles: suggestedMatches, loading: profilesLoading } = useOppositeGenderProfiles({
-    userId: currentUser?.uid,
-    userGender: userProfile?.personal?.gender,
-    limit: 6,
-    enabled: !!currentUser?.uid && !!userProfile?.personal?.gender
-  })
-
   useEffect(() => {
-    const checkProfileCompletion = async () => {
-      if (currentUser && userProfile) {
-        const completion = getProfileCompletion()
-        // Show profile completion modal if completion is less than 50%
-        if (completion < 50) {
-          setShowProfileModal(true)
-        }
-        setLoading(false)
+    if (currentUser && userProfile) {
+      const completion = getProfileCompletion()
+      if (completion < 50) {
+        setShowProfileModal(true)
       }
+      setLoading(false)
     }
-
-    checkProfileCompletion()
   }, [currentUser, userProfile, getProfileCompletion])
 
   const handleDeleteAccount = async () => {
@@ -142,561 +151,601 @@ const DashboardPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-primary-cream flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-gold"></div>
+      <div className="min-h-screen bg-[#FFFDF9] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#801B2E]"></div>
       </div>
     )
   }
 
   const profileCompletion = getProfileCompletion()
-  const isProfilePending = userProfile?.profileStatus === PROFILE_STATUS.PENDING
-  const isProfileApproved = userProfile?.profileStatus === PROFILE_STATUS.APPROVED
-  const isProfileRejected = userProfile?.profileStatus === PROFILE_STATUS.REJECTED
+  const userName = userProfile?.personal?.name || 'User'
 
-  const getStatusBadge = () => {
-    if (isProfileApproved) {
-      return (
-        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-800 text-sm font-medium">
-          <FaCheckCircle /> Approved
-        </span>
-      )
-    }
-    if (isProfilePending) {
-      return (
-        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-sm font-medium">
-          <FaClock /> Pending Review
-        </span>
-      )
-    }
-    if (isProfileRejected) {
-      return (
-        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-800 text-sm font-medium">
-          <FaTimesCircle /> Rejected
-        </span>
-      )
-    }
-    return null
-  }
-
-  const formatFirestoreDate = (dateObj) => {
-    if (!dateObj) return 'N/A'
-    if (dateObj.toDate) return dateObj.toDate().toLocaleDateString()
-    if (dateObj.seconds) return new Date(dateObj.seconds * 1000).toLocaleDateString()
-    return new Date(dateObj).toLocaleDateString()
-  }
+  const sidebarNavItems = [
+    { id: 'dashboard', name: 'Dashboard', icon: <FaUser />, badge: null, path: '/dashboard' },
+    { id: 'interests', name: 'Interests', icon: <FaHeart />, badge: null, path: '/interests' },
+    { id: 'shortlisted', name: 'Shortlisted', icon: <FaStar />, badge: null, path: '/interests' },
+    { id: 'settings', name: 'Account Settings', icon: <FaCog />, badge: null, path: '/my-profile' },
+    { id: 'support', name: 'Help & Support', icon: <FaQuestionCircle />, badge: null, path: '/contact' }
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-cream to-white">
+    <div className="min-h-screen bg-[#FFFDF9] font-sans antialiased text-gray-800 flex flex-col">
+      {/* Top Header Navigation */}
       <Header />
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-serif font-bold text-primary-maroon mb-2">
-                Welcome back, {userProfile?.personal?.name || 'User'}!
-              </h1>
-              <p className="text-gray-600">Manage your profile and find your perfect match</p>
-            </div>
-            {getStatusBadge()}
-          </div>
-        </div>
 
-        {profileCompletion < 100 && (
-          <GlassCard className="mb-6 bg-primary-cream/50 border border-primary-gold/20">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-primary-maroon mb-2">
-                  Complete Your Profile
-                </h3>
-                <p className="text-gray-600 mb-3">
-                  Your profile is {profileCompletion}% complete. Complete your profile to get better matches!
-                </p>
-                <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-                  <div
-                    className="bg-gradient-to-r from-primary-maroon to-primary-gold h-3 rounded-full transition-all duration-300"
-                    style={{ width: `${profileCompletion}%` }}
-                  />
-                </div>
-              </div>
-              <Button onClick={() => setShowProfileModal(true)}>
-                <FaEdit className="mr-2" />
-                Complete Profile
-              </Button>
-            </div>
-          </GlassCard>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <GlassCard>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Profile Views</p>
-                <p className="text-2xl font-bold text-primary-maroon">
-                  {liveStats ? liveStats.profileViews : (userProfile?.stats?.profileViews || 0)}
-                </p>
-              </div>
-              <div className="p-3 bg-primary-maroon/10 rounded-full">
-                <FaUser className="text-primary-maroon text-xl" />
-              </div>
-            </div>
-          </GlassCard>
-
-          <GlassCard>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Interests Received</p>
-                <p className="text-2xl font-bold text-primary-maroon">
-                  {liveStats ? liveStats.interestsReceived : (userProfile?.stats?.interestsReceived || 0)}
-                </p>
-              </div>
-              <div className="p-3 bg-primary-maroon/10 rounded-full">
-                <FaHeart className="text-primary-maroon text-xl" />
-              </div>
-            </div>
-          </GlassCard>
-
-          <GlassCard>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Interests Sent</p>
-                <p className="text-2xl font-bold text-primary-maroon">
-                  {liveStats ? liveStats.interestsSent : (userProfile?.stats?.interestsSent || 0)}
-                </p>
-              </div>
-              <div className="p-3 bg-primary-gold/20 rounded-full">
-                <FaHeart className="text-primary-gold text-xl" />
-              </div>
-            </div>
-          </GlassCard>
-
-          <GlassCard>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Matches</p>
-                <p className="text-2xl font-bold text-primary-maroon">
-                  {liveStats ? liveStats.matches : (userProfile?.stats?.matches || 0)}
-                </p>
-              </div>
-              <div className="p-3 bg-primary-gold/20 rounded-full">
-                <FaCheckCircle className="text-primary-maroon text-xl" />
-              </div>
-            </div>
-          </GlassCard>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <GlassCard className="cursor-pointer" onClick={() => navigate('/search')}>
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-primary-maroon/10 rounded-xl">
-                <FaSearch className="text-primary-maroon text-2xl" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">Search Matches</h3>
-                <p className="text-sm text-gray-600">Find your perfect match</p>
-              </div>
-            </div>
-          </GlassCard>
-
-          <GlassCard className="cursor-pointer" onClick={() => navigate('/interests')}>
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-primary-maroon/10 rounded-xl">
-                <FaHeart className="text-primary-maroon text-2xl" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">My Interests</h3>
-                <p className="text-sm text-gray-600">View sent and received interests</p>
-              </div>
-            </div>
-          </GlassCard>
-
-          {!isPremiumUser() && (
-            <GlassCard className="cursor-pointer" onClick={() => navigate('/subscription')}>
-              <div className="flex items-center gap-4">
-                <div className="p-4 bg-primary-gold/20 rounded-xl">
-                  <FaCrown className="text-primary-gold text-2xl" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-1">Go Premium</h3>
-                  <p className="text-sm text-gray-600">Unlock premium features</p>
-                </div>
-              </div>
-            </GlassCard>
-          )}
-        </div>
-
-        {/* Incoming Requests Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-serif font-bold text-primary-maroon flex items-center gap-2">
-                <FaHeart className="text-primary-maroon" /> Incoming Requests
-              </h2>
-              <span className="bg-primary-maroon text-white text-xs px-2.5 py-0.5 rounded-full font-bold">
-                {incomingRequests.length}
-              </span>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => navigate('/interests')}>
-              View All in My Interests
-            </Button>
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          
+          {/* MOBILE NAVIGATION HORIZONTAL PILL SCROLL */}
+          <div className="lg:hidden w-full flex items-center space-x-2 overflow-x-auto no-scrollbar bg-white p-2.5 rounded-2xl border border-rose-100/90 shadow-2xs">
+            {sidebarNavItems.map((item) => {
+              const isActive = activeTab === item.id || (item.id === 'dashboard' && activeTab === 'dashboard')
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id)
+                    if (item.path && item.path !== '/dashboard') navigate(item.path)
+                  }}
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${
+                    isActive
+                      ? 'bg-[#801B2E] text-white shadow-xs'
+                      : 'text-gray-700 bg-rose-50/50 hover:bg-rose-100'
+                  }`}
+                >
+                  <span className={`text-xs ${isActive ? 'text-white' : 'text-[#801B2E]'}`}>{item.icon}</span>
+                  <span>{item.name}</span>
+                </button>
+              )
+            })}
           </div>
 
-          {incomingRequests.length === 0 ? (
-            <GlassCard className="p-6 text-center bg-white/60">
-              <p className="text-gray-500 font-medium">No pending incoming requests at the moment.</p>
-            </GlassCard>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {incomingRequests.map((item) => {
-                const profile = item.profile
-                const photoUrl = getProfilePhotoUrl(profile)
-                const isActioning = actionLoadingId === item.id
-
+          {/* DESKTOP LEFT SIDEBAR NAVIGATION PANEL */}
+          <aside className="hidden lg:block w-64 shrink-0 bg-white rounded-3xl border border-rose-100/90 shadow-sm p-4 space-y-6 sticky top-24">
+            <nav className="space-y-1">
+              {sidebarNavItems.map((item) => {
+                const isActive = activeTab === item.id || (item.id === 'dashboard' && activeTab === 'dashboard')
                 return (
-                  <div
+                  <button
                     key={item.id}
-                    className="bg-white rounded-2xl p-5 border border-primary-gold/30 shadow-sm flex flex-col justify-between hover:shadow-md transition-all"
+                    onClick={() => {
+                      setActiveTab(item.id)
+                      if (item.path && item.path !== '/dashboard') {
+                        navigate(item.path)
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-semibold transition-all ${
+                      isActive 
+                        ? 'bg-[#801B2E] text-white shadow-md' 
+                        : 'text-gray-700 hover:bg-rose-50/70 hover:text-[#801B2E]'
+                    }`}
                   >
-                    <div className="flex items-center gap-4 mb-4">
-                      <div
-                        className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-maroon/20 to-primary-gold/20 overflow-hidden flex-shrink-0 cursor-pointer"
-                        onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
-                      >
-                        {photoUrl ? (
-                          <img src={photoUrl} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center font-serif text-xl font-bold text-primary-maroon">
-                            {profile?.personal?.name?.charAt(0) || '?'}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h4
-                          className="font-serif font-bold text-primary-maroon text-lg truncate cursor-pointer hover:underline"
-                          onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
-                        >
-                          {profile?.personal?.name || 'Profile'}
-                        </h4>
-                        <p className="text-xs text-gray-600">
-                          {profile?.personal?.age ? `${profile.personal.age} yrs` : ''}
-                          {profile?.personal?.location ? ` • ${profile.personal.location}` : ''}
-                        </p>
-                        <span className="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                          Pending Request
-                        </span>
-                      </div>
+                    <div className="flex items-center space-x-3">
+                      <span className={`text-sm ${isActive ? 'text-white' : 'text-[#801B2E]'}`}>{item.icon}</span>
+                      <span>{item.name}</span>
                     </div>
+                    {item.badge && (
+                      <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </nav>
 
-                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        className="flex-1"
-                        loading={isActioning}
-                        disabled={isActioning}
-                        onClick={() => handleAcceptInterest(item.id)}
-                        icon={<FaCheck />}
-                      >
-                        Accept
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        disabled={isActioning}
-                        onClick={() => handleRejectInterest(item.id)}
-                        icon={<FaTimes />}
-                      >
-                        Reject
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
-                        icon={<FaEye />}
+            {/* Watermark Accent */}
+            <div className="pt-2 flex justify-center opacity-30 pointer-events-none">
+              <img src={cornerFlowerImage} alt="" className="h-10 w-auto object-contain" />
+            </div>
+          </aside>
+
+          {/* MAIN CONTENT AREA */}
+          <main className="flex-1 w-full space-y-6">
+            
+            {/* HERO WELCOME BANNER */}
+            <div className="bg-gradient-to-r from-[#FFF7F8] via-[#FFFDF5] to-[#FFF7F8] p-6 sm:p-8 rounded-3xl border border-rose-100/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              <div className="space-y-2 text-left z-10">
+                <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#801B2E] leading-tight">
+                  Welcome back, {userName}! 👋
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-600 font-medium">
+                  Manage your profile and find your perfect match
+                </p>
+                <div className="flex items-center space-x-2 pt-1">
+                  <div className="h-[1px] w-8 bg-amber-300" />
+                  <span className="text-[#C59B27] text-xs">🌸</span>
+                  <div className="h-[1px] w-8 bg-amber-300" />
+                </div>
+              </div>
+
+              {/* Profile Completion Circle Ring & Action */}
+              <div className="flex items-center space-x-4 bg-white/80 backdrop-blur-xs p-4 rounded-2xl border border-rose-100/80 shadow-xs shrink-0 z-10">
+                <div className="relative w-16 h-16 rounded-full border-4 border-[#C59B27] flex items-center justify-center bg-amber-50/50 shrink-0">
+                  <span className="text-xs font-serif font-bold text-[#801B2E]">{profileCompletion}%</span>
+                  <span className="text-[8px] font-bold text-gray-500 block absolute bottom-2">Complete</span>
+                </div>
+                <div className="space-y-1.5 text-left">
+                  <span className="text-xs font-bold text-[#801B2E] block">
+                    {profileCompletion >= 100 ? "Your profile is fully complete!" : "Complete your profile to get matched!"}
+                  </span>
+                  <p className="text-[11px] text-gray-500">You're all set to find your perfect match.</p>
+                  <button
+                    onClick={() => navigate('/my-profile')}
+                    className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full border border-[#801B2E] text-[#801B2E] text-[11px] font-bold hover:bg-rose-50 transition-colors"
+                  >
+                    <FaEye className="text-[10px]" />
+                    <span>View My Profile</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 4 STAT CARDS ROW */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              
+              {/* Profile Views */}
+              <div className="bg-white p-5 rounded-2xl border border-rose-100/90 shadow-2xs hover:shadow-md transition-shadow flex items-center justify-between">
+                <div className="space-y-1 text-left">
+                  <span className="text-xs text-gray-500 font-semibold block">Profile Views</span>
+                  <span className="text-2xl font-serif font-bold text-[#801B2E]">
+                    {liveStats ? liveStats.profileViews : (userProfile?.stats?.profileViews || 0)}
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-bold block">↑ 12% this week</span>
+                </div>
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 text-[#801B2E] flex items-center justify-center text-base shrink-0">
+                  <FaEye />
+                </div>
+              </div>
+
+              {/* Interests Received */}
+              <div className="bg-white p-5 rounded-2xl border border-rose-100/90 shadow-2xs hover:shadow-md transition-shadow flex items-center justify-between">
+                <div className="space-y-1 text-left">
+                  <span className="text-xs text-gray-500 font-semibold block">Interests Received</span>
+                  <span className="text-2xl font-serif font-bold text-[#801B2E]">
+                    {liveStats ? liveStats.interestsReceived : (userProfile?.stats?.interestsReceived || 0)}
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-bold block">↑ 20% this week</span>
+                </div>
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 text-[#801B2E] flex items-center justify-center text-base shrink-0">
+                  <FaHeart />
+                </div>
+              </div>
+
+              {/* Interests Sent */}
+              <div className="bg-white p-5 rounded-2xl border border-rose-100/90 shadow-2xs hover:shadow-md transition-shadow flex items-center justify-between">
+                <div className="space-y-1 text-left">
+                  <span className="text-xs text-gray-500 font-semibold block">Interests Sent</span>
+                  <span className="text-2xl font-serif font-bold text-[#801B2E]">
+                    {liveStats ? liveStats.interestsSent : (userProfile?.stats?.interestsSent || 0)}
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-bold block">↑ 10% this week</span>
+                </div>
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 text-[#801B2E] flex items-center justify-center text-base shrink-0">
+                  <FaPaperPlane />
+                </div>
+              </div>
+
+              {/* Matches */}
+              <div className="bg-white p-5 rounded-2xl border border-rose-100/90 shadow-2xs hover:shadow-md transition-shadow flex items-center justify-between">
+                <div className="space-y-1 text-left">
+                  <span className="text-xs text-gray-500 font-semibold block">Matches</span>
+                  <span className="text-2xl font-serif font-bold text-[#801B2E]">
+                    {liveStats ? liveStats.matches : (userProfile?.stats?.matches || 0)}
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-bold block">↑ 25% this week</span>
+                </div>
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 text-[#801B2E] flex items-center justify-center text-base shrink-0">
+                  <FaUserFriends />
+                </div>
+              </div>
+
+            </div>
+
+            {/* MIDDLE 3 CARDS ROW */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              {/* Find Your Perfect Match */}
+              <div className="bg-white p-6 rounded-3xl border border-rose-100/90 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between text-left space-y-4">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 text-[#801B2E] flex items-center justify-center text-xl">
+                    <FaSearch />
+                  </div>
+                  <h3 className="text-base font-serif font-bold text-[#801B2E]">Find Your Perfect Match</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    Search from thousands of verified profiles based on your preferences.
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate('/search')}
+                  className="w-full py-2.5 rounded-full bg-[#801B2E] hover:bg-[#681423] text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center space-x-2"
+                >
+                  <span>Search Matches</span>
+                  <FaArrowRight className="text-[10px]" />
+                </button>
+              </div>
+
+              {/* My Interests */}
+              <div className="bg-white p-6 rounded-3xl border border-rose-100/90 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between text-left space-y-4">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 text-[#801B2E] flex items-center justify-center text-xl">
+                    <FaHeart />
+                  </div>
+                  <h3 className="text-base font-serif font-bold text-[#801B2E]">My Interests</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    View and manage interests you've sent and received.
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate('/interests')}
+                  className="w-full py-2.5 rounded-full border border-[#801B2E] text-[#801B2E] hover:bg-rose-50 text-xs font-bold transition-all flex items-center justify-center space-x-2"
+                >
+                  <span>View Interests</span>
+                  <FaArrowRight className="text-[10px]" />
+                </button>
+              </div>
+
+              {/* Romantic Couple Banner Quote Card */}
+              <div className="bg-gradient-to-r from-amber-50/80 via-rose-50/60 to-amber-50/80 p-5 rounded-3xl border border-amber-200/80 shadow-2xs relative overflow-hidden flex items-center justify-between">
+                <div className="space-y-2 text-left max-w-[55%] z-10">
+                  <span className="text-2xl font-serif text-[#C59B27] block">“</span>
+                  <p className="text-xs font-serif font-bold text-[#801B2E] leading-snug">
+                    Every connection begins with trust and understanding.
+                  </p>
+                  <div className="h-[2px] w-8 bg-[#C59B27] mt-1" />
+                </div>
+
+                <div className="w-32 h-36 rounded-2xl overflow-hidden shadow-xs shrink-0 relative">
+                  <img src={stylishCouple} alt="" className="w-full h-full object-cover object-top" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                </div>
+              </div>
+
+            </div>
+
+            {/* INCOMING INTERESTS & MY MATCHES ROW */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              
+              {/* Incoming Interests (Span 7) */}
+              <div className="lg:col-span-7 bg-white p-6 rounded-3xl border border-rose-100/90 shadow-2xs space-y-4 text-left">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-rose-500 text-sm">♥</span>
+                    <h3 className="text-base font-serif font-bold text-[#801B2E]">Incoming Interests</h3>
+                    <span className="bg-[#801B2E] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {incomingRequests.length}
+                    </span>
+                  </div>
+                  <button onClick={() => navigate('/interests')} className="text-xs text-rose-600 font-bold hover:underline">
+                    View All
+                  </button>
+                </div>
+
+                {incomingRequests.length === 0 ? (
+                  <div className="p-6 text-center text-gray-500 font-medium text-xs bg-rose-50/20 rounded-2xl border border-rose-100/80">
+                    No pending incoming requests at the moment.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {incomingRequests.map((item) => {
+                      const profile = item.profile
+                      const photoUrl = getProfilePhotoUrl(profile)
+                      const isActioning = actionLoadingId === item.id
+
+                      return (
+                        <div key={item.id} className="bg-rose-50/40 p-3 rounded-2xl border border-rose-100 flex flex-col justify-between space-y-2 text-center">
+                          <div 
+                            className="w-10 h-10 rounded-full bg-[#801B2E] text-white font-serif font-bold text-xs flex items-center justify-center mx-auto shadow-2xs cursor-pointer overflow-hidden"
+                            onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
+                          >
+                            {photoUrl ? (
+                              <img src={photoUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              profile?.personal?.name?.charAt(0) || 'P'
+                            )}
+                          </div>
+                          <div>
+                            <h4 
+                              className="text-xs font-bold text-[#801B2E] truncate cursor-pointer hover:underline"
+                              onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
+                            >
+                              {profile?.personal?.name || 'User Profile'}
+                            </h4>
+                            <p className="text-[10px] text-gray-400 font-medium truncate">
+                              {profile?.personal?.age ? `${profile.personal.age} yrs` : ''} 
+                              {profile?.personal?.location ? ` • ${profile.personal.location}` : ''}
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-center space-x-2 pt-1">
+                            <button
+                              disabled={isActioning}
+                              onClick={() => handleAcceptInterest(item.id)}
+                              className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center text-xs hover:bg-emerald-600 hover:text-white transition-colors"
+                              title="Accept"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              disabled={isActioning}
+                              onClick={() => handleRejectInterest(item.id)}
+                              className="w-7 h-7 rounded-full bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center text-xs hover:bg-rose-600 hover:text-white transition-colors"
+                              title="Reject"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* My Matches (Span 5) */}
+              <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-rose-100/90 shadow-2xs space-y-4 text-left">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FaCheckCircle className="text-emerald-600 text-sm" />
+                    <h3 className="text-base font-serif font-bold text-[#801B2E]">My Matches</h3>
+                    <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {matchesList.length}
+                    </span>
+                  </div>
+                  <button onClick={() => navigate('/search')} className="text-xs text-rose-600 font-bold hover:underline">
+                    View All
+                  </button>
+                </div>
+
+                {matchesList.length === 0 ? (
+                  <div className="p-6 text-center text-gray-500 font-medium text-xs bg-rose-50/20 rounded-2xl border border-rose-100/80 space-y-2">
+                    <p>No accepted matches yet.</p>
+                    <button
+                      onClick={() => navigate('/search')}
+                      className="px-4 py-1 rounded-full bg-[#801B2E] text-white text-[11px] font-bold"
+                    >
+                      Find Matches
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {matchesList.map((item) => {
+                      const profile = item.profile
+                      const photoUrl = getProfilePhotoUrl(profile)
+
+                      return (
+                        <div key={item.id} className="bg-rose-50/40 p-4 rounded-2xl border border-rose-100 flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div 
+                              className="w-11 h-11 rounded-full bg-[#801B2E] text-white font-serif font-bold text-sm flex items-center justify-center shadow-2xs overflow-hidden cursor-pointer"
+                              onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
+                            >
+                              {photoUrl ? (
+                                <img src={photoUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                profile?.personal?.name?.charAt(0) || 'M'
+                              )}
+                            </div>
+                            <div>
+                              <h4 
+                                className="text-xs font-bold text-[#801B2E] cursor-pointer hover:underline"
+                                onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
+                              >
+                                {profile?.personal?.name || 'Matched Profile'}
+                              </h4>
+                              <p className="text-[10px] text-gray-400 font-medium">
+                                {profile?.personal?.age ? `${profile.personal.age} yrs` : ''} 
+                                {profile?.personal?.location ? ` • ${profile.personal.location}` : ''}
+                              </p>
+                              <span className="inline-block mt-0.5 text-[9px] font-bold px-2 py-0.2 rounded-full bg-emerald-100 text-emerald-700">
+                                Matched
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
+                              className="px-3.5 py-1.5 rounded-full border border-gray-300 text-gray-700 text-[11px] font-bold hover:bg-gray-50 transition-colors"
+                            >
+                              View Profile
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* PROFILE OVERVIEW & ACCOUNT STATUS ROW */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              
+              {/* Profile Overview Card (Span 7) */}
+              <div className="lg:col-span-7 bg-white p-6 rounded-3xl border border-rose-100/90 shadow-2xs space-y-5 text-left">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-serif font-bold text-[#801B2E]">Profile Overview</h3>
+                  {currentUser?.emailVerified && (
+                    <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold">
+                      <FaCheckCircle className="text-xs" />
+                      <span>Verified</span>
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 rounded-full bg-[#801B2E] text-white text-2xl font-serif font-bold flex items-center justify-center shadow-md shrink-0 overflow-hidden">
+                    {(userProfile?.profile?.lifestyleHabits?.profilePhotoUrl || userProfile?.profilePhotoUrl) ? (
+                      <img
+                        src={userProfile.profile?.lifestyleHabits?.profilePhotoUrl || userProfile.profilePhotoUrl}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      userName.charAt(0)
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-serif font-bold text-[#801B2E]">{userName}</h4>
+                    <p className="text-xs text-gray-500 font-medium">
+                      {userProfile?.personal?.age ? `${userProfile.personal.age} yrs` : 'N/A'}
+                      {userProfile?.personal?.height ? `, ${userProfile.personal.height}` : ''} • {userProfile?.personal?.city || userProfile?.personal?.location || 'India'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {userProfile?.personal?.religion || 'N/A'} • {userProfile?.personal?.caste || 'N/A'} • {userProfile?.personal?.maritalStatus || 'Never Married'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-rose-50/30 p-4 rounded-2xl border border-rose-100/60 text-xs">
+                  <div>
+                    <span className="text-[10px] text-gray-400 block font-semibold">Education</span>
+                    <span className="font-bold text-gray-800 truncate block">
+                      {userProfile?.profile?.educationEmployment?.highestEducation || 
+                       userProfile?.profile?.educationEmployment?.degree || 
+                       userProfile?.education?.highestDegree || 
+                       userProfile?.education?.degree || 
+                       userProfile?.highestEducation || 
+                       userProfile?.education || 
+                       'N/A'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-gray-400 block font-semibold">Profession</span>
+                    <span className="font-bold text-gray-800 truncate block">
+                      {userProfile?.profile?.educationEmployment?.jobTitle || 
+                       userProfile?.profile?.educationEmployment?.occupation || 
+                       userProfile?.education?.occupation || 
+                       userProfile?.education?.employedIn || 
+                       userProfile?.occupation || 
+                       userProfile?.employedIn || 
+                       'N/A'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-gray-400 block font-semibold">Income</span>
+                    <span className="font-bold text-gray-800 truncate block">
+                      {userProfile?.profile?.educationEmployment?.annualIncome || 
+                       userProfile?.profile?.educationEmployment?.incomeRange || 
+                       userProfile?.education?.annualIncome || 
+                       userProfile?.education?.incomeRange || 
+                       userProfile?.annualIncome || 
+                       userProfile?.incomeRange || 
+                       'N/A'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-gray-400 block font-semibold">Family Type</span>
+                    <span className="font-bold text-gray-800 truncate block">
+                      {userProfile?.profile?.familyDetails?.familyType || 
+                       userProfile?.family?.familyType || 
+                       userProfile?.familyType || 
+                       'Nuclear'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                  <button
+                    onClick={() => setShowProfileModal(true)}
+                    className="w-full sm:w-1/2 py-2.5 rounded-full bg-[#C59B27] hover:bg-[#b0881f] text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center space-x-2"
+                  >
+                    <FaEdit />
+                    <span>Edit Profile</span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/my-profile')}
+                    className="w-full sm:w-1/2 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-bold transition-all flex items-center justify-center space-x-2"
+                  >
+                    <FaEye />
+                    <span>View Full Profile</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Account Status Card (Span 5) */}
+              <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-rose-100/90 shadow-2xs space-y-4 text-left">
+                <h3 className="text-base font-serif font-bold text-[#801B2E]">Account Status</h3>
+
+                <div className="space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                    <span className="text-gray-500 font-medium flex items-center space-x-2">
+                      <FaCrown className="text-[#C59B27]" />
+                      <span>Membership Plan</span>
+                    </span>
+                    <span className="font-bold text-[#C59B27]">
+                      {getActivePackage()?.name || (isPremiumUser() ? 'Premium Plan' : 'Free User')}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                    <span className="text-gray-500 font-medium flex items-center space-x-2">
+                      <FaClock className="text-gray-400" />
+                      <span>Member Since</span>
+                    </span>
+                    <span className="font-bold text-gray-800">
+                      {userProfile?.createdAt ? (userProfile.createdAt.toDate ? userProfile.createdAt.toDate().toLocaleDateString() : new Date(userProfile.createdAt).toLocaleDateString()) : 'N/A'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                    <span className="text-gray-500 font-medium flex items-center space-x-2">
+                      <FaShieldAlt className="text-emerald-500" />
+                      <span>Profile Status</span>
+                    </span>
+                    <span className="font-bold text-emerald-600">
+                      {userProfile?.profileStatus || 'Approved'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 pb-2 border-b border-gray-100">
+                    <div className="flex items-center justify-between text-gray-500 font-medium">
+                      <span>Profile Completion</span>
+                      <span className="font-bold text-emerald-600">{profileCompletion}%</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className="bg-emerald-500 h-1.5 rounded-full transition-all duration-300"
+                        style={{ width: `${profileCompletion}%` }}
                       />
                     </div>
                   </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
 
-        {/* My Matches Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-serif font-bold text-primary-maroon flex items-center gap-2">
-                <FaCheckCircle className="text-green-600" /> My Matches
-              </h2>
-              <span className="bg-green-700 text-white text-xs px-2.5 py-0.5 rounded-full font-bold">
-                {matchesList.length}
-              </span>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => navigate('/interests')}>
-              View All
-            </Button>
-          </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500 font-medium flex items-center space-x-2">
+                      <FaClock className="text-gray-400" />
+                      <span>Plan Valid Till</span>
+                    </span>
+                    <span className="font-bold text-gray-800">
+                      {userProfile?.subscription?.expiryDate 
+                        ? (userProfile.subscription.expiryDate.toDate 
+                            ? userProfile.subscription.expiryDate.toDate().toLocaleDateString() 
+                            : new Date(userProfile.subscription.expiryDate).toLocaleDateString()) 
+                        : 'N/A'}
+                    </span>
+                  </div>
+                </div>
 
-          {matchesList.length === 0 ? (
-            <GlassCard className="p-6 text-center bg-white/60">
-              <p className="text-gray-500 font-medium mb-3">No accepted matches yet.</p>
-              <Button variant="primary" size="sm" onClick={() => navigate('/search')}>
-                Find Matches
-              </Button>
-            </GlassCard>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {matchesList.map((item) => {
-                const profile = item.profile
-                const photoUrl = getProfilePhotoUrl(profile)
-
-                return (
-                  <div
-                    key={item.id}
-                    className="bg-white rounded-2xl p-5 border border-green-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all"
+                <div className="pt-2">
+                  <button
+                    onClick={() => { setDeleteError(null); setShowDeleteModal(true) }}
+                    className="w-full py-2.5 rounded-full border border-rose-200 text-rose-600 text-xs font-bold hover:bg-rose-50 transition-colors flex items-center justify-center space-x-2"
                   >
-                    <div className="flex items-center gap-4 mb-4">
-                      <div
-                        className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-maroon/20 to-primary-gold/20 overflow-hidden flex-shrink-0 cursor-pointer"
-                        onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
-                      >
-                        {photoUrl ? (
-                          <img src={photoUrl} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center font-serif text-xl font-bold text-primary-maroon">
-                            {profile?.personal?.name?.charAt(0) || '?'}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h4
-                          className="font-serif font-bold text-primary-maroon text-lg truncate cursor-pointer hover:underline"
-                          onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
-                        >
-                          {profile?.personal?.name || 'Profile'}
-                        </h4>
-                        <p className="text-xs text-gray-600">
-                          {profile?.personal?.age ? `${profile.personal.age} yrs` : ''}
-                          {profile?.personal?.location ? ` • ${profile.personal.location}` : ''}
-                        </p>
-                        <span className="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-800 border border-green-200">
-                          Matched
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => profile?.id && navigate(`/chat/${profile.id}`)}
-                        icon={<FaComments />}
-                      >
-                        Message
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => profile?.id && navigate(`/profile/${profile.id}`)}
-                        icon={<FaEye />}
-                      >
-                        View
-                      </Button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <GlassCard>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">Profile Overview</h3>
-              {currentUser?.emailVerified && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Verified
-                </span>
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 mb-4">
-              <div className="flex-shrink-0 w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-primary-maroon to-primary-gold flex items-center justify-center">
-                {(userProfile?.profile?.lifestyleHabits?.profilePhotoUrl || userProfile?.profilePhotoUrl) ? (
-                  <img
-                    src={userProfile.profile?.lifestyleHabits?.profilePhotoUrl || userProfile.profilePhotoUrl}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-4xl text-white">{userProfile?.personal?.name?.charAt(0) || '?'}</span>
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="text-lg font-semibold text-gray-800">
-                  {userProfile?.personal?.name || 'User'}
-                </p>
-                <p className="text-sm text-gray-600">{userProfile?.personal?.location || 'N/A'}</p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Name:</span>
-                <span className="font-medium">{userProfile?.personal?.name || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Age:</span>
-                <span className="font-medium">{userProfile?.personal?.age || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Location:</span>
-                <span className="font-medium">{userProfile?.personal?.location || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Religion:</span>
-                <span className="font-medium">{userProfile?.personal?.religion || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Caste:</span>
-                <span className="font-medium">{userProfile?.personal?.caste || 'N/A'}</span>
-              </div>
-              {userProfile?.education?.degree && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Education:</span>
-                  <span className="font-medium">{userProfile.education.degree}</span>
+                    <FaTrashAlt className="text-xs" />
+                    <span>Delete My Account</span>
+                  </button>
                 </div>
-              )}
-              {userProfile?.education?.occupation && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Occupation:</span>
-                  <span className="font-medium">{userProfile.education.occupation}</span>
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <Button variant="outline" className="flex-1" onClick={() => navigate('/my-profile')}>
-                <FaEye className="mr-2" />
-                View My Profile
-              </Button>
-              <Button variant="outline" className="flex-1" onClick={() => setShowProfileModal(true)}>
-                <FaEdit className="mr-2" />
-                Edit Profile
-              </Button>
-            </div>
-          </GlassCard>
+              </div>
 
-          <GlassCard>
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Account Status</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Account Type:</span>
-                <span className="font-medium capitalize">
-                  {isPremiumUser() ? (
-                    <span className="text-primary-gold">Premium User</span>
-                  ) : (
-                    'Free User'
-                  )}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Profile Status:</span>
-                <span className="font-medium">
-                  {getStatusBadge()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Profile Completion:</span>
-                <span className="font-medium">{profileCompletion}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Member Since:</span>
-                <span className="font-medium">
-                  {formatFirestoreDate(userProfile?.createdAt)}
-                </span>
-              </div>
-              {isPremiumUser() && userProfile?.subscription && (
-                <>
-                  {getActivePackage() && (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Plan Name:</span>
-                        <span className="font-medium text-primary-gold">
-                          {getActivePackage().name}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Price:</span>
-                        <span className="font-medium">
-                          ₹{getActivePackage().price.toLocaleString()}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Plan Purchased:</span>
-                    <span className="font-medium">
-                      {formatFirestoreDate(userProfile.subscription.startDate || userProfile.subscription.purchaseDate)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Plan Expires:</span>
-                    <span className="font-medium">
-                      {formatFirestoreDate(userProfile.subscription.expiryDate)}
-                    </span>
-                  </div>
-                </>
-              )}
             </div>
-            {!isPremiumUser() && (
-              <Button variant="primary" className="w-full mt-4" onClick={() => navigate('/subscription')}>
-                <FaCrown className="mr-2" />
-                Upgrade to Premium
-              </Button>
-            )}
 
-            {/* Danger zone */}
-            <div className="mt-5 pt-4 border-t border-red-100">
-              <p className="text-xs text-gray-400 mb-3 font-medium uppercase tracking-wide">
-                Danger Zone
-              </p>
-              <button
-                onClick={() => { setDeleteError(null); setShowDeleteModal(true) }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
-                  border-2 border-red-200 text-red-600 text-sm font-semibold
-                  hover:bg-red-50 hover:border-red-400 active:scale-[0.98]
-                  transition-all duration-200"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                Delete My Account
-              </button>
-            </div>
-          </GlassCard>
+          </main>
         </div>
-
-        {/* Suggested Matches - opposite gender profiles, after Profile Overview & Account Status */}
-        {suggestedMatches.length > 0 && (
-          <div className="mt-10">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-serif font-bold text-primary-maroon">
-                Suggested Matches
-              </h2>
-              <Button variant="outline" size="sm" onClick={() => navigate('/search')}>
-                View All
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-              {suggestedMatches.map((profile) => (
-                <ProfileCard key={profile.id} profile={profile} compact showActions={false} />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Footer */}
+      <Footer />
 
       {/* Profile Completion Modal */}
       <ProfileCompletionModal

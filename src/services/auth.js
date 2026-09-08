@@ -331,7 +331,15 @@ export const isAdmin = async (userId) => {
 export const isPremiumUser = async (userId) => {
   try {
     const profile = await getUserProfile(userId)
-    return profile.success && profile.data.role === 'premium_user'
+    if (!profile.success || !profile.data) return false
+    const data = profile.data
+    if (data.role === 'premium_user' || data.isPremium === true) return true
+    if (data.subscription && data.subscription.isActive !== false) {
+      if (!data.subscription.expiryDate) return true
+      const exp = data.subscription.expiryDate?.toDate?.() || data.subscription.expiryDate
+      return exp && new Date(exp) > new Date()
+    }
+    return false
   } catch (error) {
     return false
   }
